@@ -372,26 +372,46 @@ function gPush() {
 }
 
 // ========================================================
-var sceneTime = new SceneTime();
-var sceneObjects = [];
+var scene = new Scene();
 
 // Testing model (delete later)
-var so_plane = new SceneObject();
-var mesh_plane = new Mesh(() => {
+var so_cube = new SceneObject();
+var mesh_cube = new Mesh(() => {
+   drawCube(); 
+});
+
+var kf_cube = [
+    new Keyframe(0.0, new Transform(vec3(0.0, -3.0, 0.0), vec3(0.0, 0.0, 60.0), vec3(1.0, 1.0, 1.0))), 
+    new Keyframe(1.0, new Transform(vec3(0.0, 0.0, 0.0), vec3(0.0, 90.0, 0.0), vec3(2.0, 2.0, 2.0))),
+    new Keyframe(3.0, new Transform(vec3(0.0, -3.0, 0.0), vec3(0.0, 180.0, 0.0), vec3(1.0, 1.0, 1.0)))
+];
+
+var ac_cube = new AnimationComponent(kf_cube);
+ac_cube.offsetKeyframes = 0.0;
+ac_cube.isLooped = true;
+
+so_cube.addComponent(ac_cube);
+so_cube.addComponent(new MeshRenderer(mesh_cube));
+
+// Testing Child
+var so_child = new SceneObject();
+var mesh_child = new Mesh(() => {
    drawCone(); 
 });
 
-so_plane.addComponent(mesh_plane);
-var keyframes_plane = [
-    new Keyframe(0.0, new Transform(vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0))),
-    new Keyframe(5.0, new Transform(vec3(0.0, 5.0, 0.0), vec3(0.0, 180.0, 0.0), vec3(1.0, 1.0, 1.0))),
-    new Keyframe(10.0, new Transform(vec3(0.0, 0.0, 0.0), vec3(0.0, 360.0, 0.0), vec3(1.0, 1.0, 1.0)))
+so_child.addComponent(new MeshRenderer(mesh_child));
+so_child.transform.translation = vec3(0.0, 3.0, 0.0);
+var kf_child = [
+    new Keyframe(1.0, new Transform(vec3(0.0, 3.0, 0.0), vec3(640.0, 360.0, 150.0), vec3(2.0, 2.0, 2.0))),
+    new Keyframe(3.0, new Transform(vec3(0.0, 3.0, 0.0), vec3(0.0, 720.0, 0.0), vec3(1.0, 1.0, 1.0)))
 ];
 
-so_plane.addComponent(new AnimationComponent(keyframes_plane));
-so_plane.addComponent(new MeshRenderer(mesh_plane));
+var ac_child = new AnimationComponent(kf_child);
+ac_child.isLooped = true;
+so_child.addComponent(ac_child);
+so_cube.addChild(so_child); // add child to parent
 
-sceneObjects.push(so_plane);
+scene.SCENEOBJECTS.push(so_cube); // add parent to scene
 
 // ========================================================
 function render() {
@@ -434,18 +454,9 @@ function render() {
     }
 
     // ========== SCENE RENDER LOOP ==============
-    sceneTime.TIME = TIME ;
-    sceneTime.DELTATIME = curTime - prevTime ;
-
-    if(sceneTime.TIME == 0.0) {
-        for( var i = 0 ; i < sceneObjects.length ; i++ ) {
-            sceneObjects[i].start(sceneTime);
-        }
-    }
-
-    for( var i = 0 ; i < sceneObjects.length ; i++ ) {
-        sceneObjects[i].update();
-    }
+    scene.TIME = TIME ;
+    scene.DELTATIME = curTime - prevTime ;
+    scene.render();
     // ===========================================
 
     

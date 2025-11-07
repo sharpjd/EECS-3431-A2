@@ -1,3 +1,15 @@
+/*
+    How this framework works:
+    - A Scene contains SceneObjects
+    - A SceneObject contains Components and child SceneObjects if needed
+    - A Component is a behaviour that can be attached to a SceneObject
+    - A MeshRenderer is a Component that draws a Mesh
+    - An AnimationComponent is a Component that animates the Transform of the SceneObject it is attached to using Keyframes and interpolation
+    
+    - In main.js, create a Scene, create SceneObjects, add Components/Childs to the SceneObjects, and add the SceneObjects to Scene.SCENEOBJECTS array
+    - In the render loop, call scene.render() to init, start and update all SceneObjects in the scene
+*/
+
 function tMatrix(matrix) {
     gPush();
     {
@@ -6,10 +18,38 @@ function tMatrix(matrix) {
     gPop();
 }
 
-class SceneTime {
+class Scene {
     constructor() {
-        this.TIME = 0;
-        this.DELTATIME = 0;
+        this.TIME = 0;              //current time since the start of the scene
+        this.DELTATIME = 0;         //time difference between current frame and previous frame
+        this.SCENESTARTED = false;  //indicates if the scene has been started
+        this.SCENEOBJECTS = [];     //contains all the SceneObjects in the scene
+    }
+    render() {
+        if(this.TIME == 0) {
+            this.SCENESTARTED = false;
+        }
+        if(this.SCENESTARTED == false) {
+            for( var i = this.SCENEOBJECTS.length-1; i >= 0; i-- ) {
+                this.SCENEOBJECTS[i].init(this);
+                this.SCENEOBJECTS[i].start();
+            }
+            this.SCENESTARTED = true;
+        }
+
+        for( var i = this.SCENEOBJECTS.length-1; i >= 0; i-- ) {
+            this.SCENEOBJECTS[i].update();
+        }
+    }
+
+    destroy(sceneObject) {
+        for( var i = this.SCENEOBJECTS.length-1; i >= 0; i-- ) {
+            if(this.SCENEOBJECTS[i] == sceneObject) {
+                this.SCENEOBJECTS.splice(i, 1); //remove from array
+                console.log("Destroyed SceneObject " + sceneObject);
+                break;
+            }
+        }
     }
 }
 
@@ -24,7 +64,14 @@ class Transform {
 class Component {
     constructor() {
         this.root;
-        this.sceneTime;
+        this.scene;
+    }
+    init(root, scene) {
+        this.root = root;
+        this.scene = scene;
+    }
+    start() {
+        // to be overridden
     }
     update() {
         // to be overridden
@@ -34,11 +81,11 @@ class Component {
 class SceneObject {
     constructor() {
         this.transform = new Transform();
-        this.components = [new Component()];
+        this.components = [];
         this.children = [];
         this.isActive = true;
         this.isDestroyed = false;
-        this.sceneTime = new SceneTime();
+        this.scene;
     }
 
     transformSceneObject() {
@@ -63,14 +110,21 @@ class SceneObject {
         });
         
     }
-    start(sceneTime) {
-        this.sceneTime = sceneTime;
+    init(scene) {
+        this.scene = scene;
         for(let component of this.components) {
-            component.sceneTime = sceneTime;
-            component.root = this;
+            component.init(this, scene);
+        }
+    }
+    start() {
+        console.log("Starting SceneObject: " );
+        console.log(this);
+        for(let component of this.components) {
+            component.start();
         }
         for(let child of this.children) {
-            child.start(sceneTime);
+            child.init(this.scene);
+            child.start();
         }
     }
 
@@ -80,7 +134,7 @@ class SceneObject {
     addChild(child) {
         this.children.push(child);
     }
-    getComponent(componentType) {
+    getComponent(componentType) { //pass the component class type as argument
         for(let component of this.components) {
             if(component instanceof componentType) {
                 return component;
@@ -88,16 +142,20 @@ class SceneObject {
         }
         return null;
     } 
+    destroy() {
+        this.isDestroyed = true;
+        this.scene.destroy(this);
+    }
 }
 
 class Mesh {
-    draw() {
-        // to be overridden
+    constructor(draw) {
+        this.draw = draw; //draw is the function used to draw the mesh
     }
 }
 
 class MeshRenderer extends Component {
-    constructor(mesh) {
+    constructor(mesh=new Mesh()) {
         super();
         this.mesh = mesh;
     }
@@ -114,13 +172,16 @@ class Keyframe {
         this.targetTransform = targetTransform;
     }
 
+    // this is a basic interpolation function that we will use for now
     matrixInterpolation(t1, t2, time, totalTime) {
         let factor = time / totalTime;
-        let interpolated = new Transform();
-        interpolated.translation = mix(t1.translation, t2.translation, factor);
-        interpolated.rotation = mix(t1.rotation, t2.rotation, factor);
-        interpolated.scale = mix(t1.scale, t2.scale, factor);
-        return interpolated;
+        let transform = new Transform();
+
+        transform.translation = mix(t2.translation, t1.translation, factor);
+        transform.rotation = mix(t2.rotation, t1.rotation, factor);
+        transform.scale = mix(t2.scale, t1.scale, factor);
+
+        return transform;
     }
 }
 
@@ -131,19 +192,28 @@ class AnimationComponent extends Component {
         this.currentKeyframe = new Keyframe();
         this.targetKeyframe = new Keyframe();
 
-        this.currentTime = 0.0;
-        this.offsetTime = 0.0;
+        this.currentTime = 0.0;         //curent time of the animation (it is DIFFERENT from Scene.TIME)
+        this.offsetTime = 0.0;          //make the animation start at a different time
+        this.offsetKeyframes = 0.0;     //delay when the animation will play. makes it easier to create an animation normally and play it at a later time
         this.animationLength = 0.0;
         this.isLooped = false;
         this.isPaused = false;
     }
     update() {
-        if(this.isLooped) {
-            this.currentTime %= this.animationLength;
-        }
         if(!this.isPaused) {
-            this.currentTime = this.sceneTime.TIME + this.offsetTime;
+            if(this.scene.TIME > this.offsetKeyframes) {
+                this.currentTime = this.scene.TIME - this.offsetKeyframes + this.offsetTime;
+            }
+        } else {
+            return;
         }
+        
+        if(this.isLooped) { 
+            this.currentTime %= this.animationLength;
+        } else if(this.currentTime > this.animationLength) {
+            this.currentTime = this.animationLength;
+        }
+        
         for(let i = 0; i < this.keyframes.length - 1; i++) {
             if(this.currentTime >= this.keyframes[i].timestamp && this.currentTime < this.keyframes[i + 1].timestamp) {
                 this.currentKeyframe = this.keyframes[i];
@@ -154,23 +224,31 @@ class AnimationComponent extends Component {
         let totalTime = this.targetKeyframe.timestamp - this.currentKeyframe.timestamp;
         let time = this.currentTime - this.currentKeyframe.timestamp;
         
-        let interpolatedTransform = this.currentKeyframe.matrixInterpolation(
+        this.root.transform = this.currentKeyframe.matrixInterpolation(
             this.currentKeyframe.targetTransform,
             this.targetKeyframe.targetTransform,
             time,
             totalTime
         );
-
-        this.root.transform = interpolatedTransform;
     }
     
-    start(root, sceneTime) {
-        super.start(root, sceneTime);
+    start() {
+        this.keyframes.sort((a, b) => a.timestamp - b.timestamp);
+
+        if(this.keyframes.length == 0) {
+            let initialKeyframe1 = new Keyframe(0.0, root.transform);
+            let initialKeyframe2 = new Keyframe(1.0, root.transform);
+            this.keyframes.push(initialKeyframe1);
+            this.keyframes.push(initialKeyframe2);
+
+        }
+
         if(this.keyframes.length > 0) {
             this.animationLength = this.keyframes[this.keyframes.length - 1].timestamp;
         }
-        else if(this.animationLength == 0.0) { //create new keyframe and put it in the front
-            let initialKeyframe = new Keyframe(0.0, root.transform);
+
+        if(this.keyframes[0].timestamp > 0.0) { //create initial keyframe at time 0 if there isn't one
+            let initialKeyframe = new Keyframe(0.0, this.root.transform);
             this.keyframes.unshift(initialKeyframe);
         }
     }

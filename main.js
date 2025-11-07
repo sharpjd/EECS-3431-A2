@@ -371,6 +371,29 @@ function gPush() {
     MS.push(modelMatrix) ;
 }
 
+// ========================================================
+var sceneTime = new SceneTime();
+var sceneObjects = [];
+
+// Testing model (delete later)
+var so_plane = new SceneObject();
+var mesh_plane = new Mesh(() => {
+   drawCone(); 
+});
+
+so_plane.addComponent(mesh_plane);
+var keyframes_plane = [
+    new Keyframe(0.0, new Transform(vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0))),
+    new Keyframe(5.0, new Transform(vec3(0.0, 5.0, 0.0), vec3(0.0, 180.0, 0.0), vec3(1.0, 1.0, 1.0))),
+    new Keyframe(10.0, new Transform(vec3(0.0, 0.0, 0.0), vec3(0.0, 360.0, 0.0), vec3(1.0, 1.0, 1.0)))
+];
+
+so_plane.addComponent(new AnimationComponent(keyframes_plane));
+so_plane.addComponent(new MeshRenderer(mesh_plane));
+
+sceneObjects.push(so_plane);
+
+// ========================================================
 function render() {
     
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -410,6 +433,21 @@ function render() {
         prevTime = curTime ;
     }
 
+    // ========== SCENE RENDER LOOP ==============
+    sceneTime.TIME = TIME ;
+    sceneTime.DELTATIME = curTime - prevTime ;
+
+    if(sceneTime.TIME == 0.0) {
+        for( var i = 0 ; i < sceneObjects.length ; i++ ) {
+            sceneObjects[i].start(sceneTime);
+        }
+    }
+
+    for( var i = 0 ; i < sceneObjects.length ; i++ ) {
+        sceneObjects[i].update();
+    }
+    // ===========================================
+
     
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, textureArray[0].textureWebGL);
@@ -423,7 +461,7 @@ function render() {
     gl.bindTexture(gl.TEXTURE_2D, textureArray[2].textureWebGL);
     gl.uniform1i(gl.getUniformLocation(program, "texture3"), 2);
     
-    
+    /*
     gTranslate(-4,0,0) ;
     gPush() ;
     {
@@ -463,6 +501,7 @@ function render() {
         drawCone() ;
     }
     gPop() ;
+    */
     
     if( animFlag )
         window.requestAnimFrame(render);

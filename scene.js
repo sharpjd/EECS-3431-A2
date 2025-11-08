@@ -36,7 +36,11 @@ var ac_cube = new AnimationComponent(kf_cube);
 ac_cube.isLooped = true;
 
 so_cube.addComponent(ac_cube);
-so_cube.addComponent(new MeshRenderer(mesh_cube));
+var so_cube_mesh_renderer = new MeshRenderer(mesh_cube)
+so_cube.addComponent(so_cube_mesh_renderer);
+
+var so_cube_bloom_applier = new BloomApplier(so_cube_mesh_renderer);
+so_cube.addComponent(so_cube_bloom_applier);
 
 // Testing Child
 var so_child = new SceneObject();

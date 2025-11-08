@@ -199,6 +199,29 @@ class MeshRenderer extends Component {
     }
 }
 
+class BloomApplier extends Component {
+    constructor(meshRenderer) {
+        super();
+        this.meshRenderer = meshRenderer;
+        if(!(this.meshRenderer instanceof MeshRenderer)) {
+            console.error("BloomApplier requires a MeshRenderer instance.");
+            throw new Error("Invalid argument for BloomApplier.");
+        }
+    }
+    update() {
+        gPush();
+        gScale(1.2, 1.2, 1.2);
+        setColor(vec4(1.0, 0.8, 0.2, 0.3));
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+        
+        this.meshRenderer.mesh.draw(); 
+
+        gl.disable(gl.BLEND);
+        gPop();
+    }
+}
+
 class Keyframe {
     constructor(timestamp, targetTransform) {
         this.timestamp = timestamp;

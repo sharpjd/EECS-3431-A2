@@ -2,16 +2,16 @@ var scene = new Scene();
 
 var so_ground = new SceneObject();
 
-// Camera controller
-var camera_controller = new SceneObject();
-camera_controller.addComponent( new CameraControllerComponent() );
-scene.SCENEOBJECTS.push( camera_controller );
+// // Camera controller
+// var camera_controller = new SceneObject();
+// camera_controller.addComponent( new CameraControllerComponent() );
+// scene.SCENEOBJECTS.push( camera_controller );
 
-// Random Placer test
-var asteroid_random_placer = new SceneObject();
-var asteroid_random_placer_component = new AsteroidRandomPlacer();
-asteroid_random_placer.addComponent( asteroid_random_placer_component );
-scene.SCENEOBJECTS.push( asteroid_random_placer );
+// // Random Placer test
+// var asteroid_random_placer = new SceneObject();
+// var asteroid_random_placer_component = new AsteroidRandomPlacer();
+// asteroid_random_placer.addComponent( asteroid_random_placer_component );
+// scene.SCENEOBJECTS.push( asteroid_random_placer );
 
 var mesh_ground = new Mesh(() => {
     gScale(20.0, 0.1, 20.0);

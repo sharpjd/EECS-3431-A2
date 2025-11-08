@@ -383,7 +383,13 @@ class AsteroidRandomPlacer extends Component {
             let z = Math.random() * (this.topRight[2] - this.bottomLeft[2]) + this.bottomLeft[2];
 
             let pos = vec3(x, y, z);
-            let asteroid = new Asteroid();
+            let asteroid = new SceneObject();
+
+            let mesh = new Mesh(() => {
+                drawCube();
+            });
+            asteroid.addComponent(new MeshRenderer(mesh));
+
             asteroid.transform.translation = pos;
 
             this.scene.SCENEOBJECTS.push(asteroid);
@@ -392,19 +398,4 @@ class AsteroidRandomPlacer extends Component {
         }
     }
 
-}
-
-class Asteroid extends SceneObject {
-    constructor() {
-        super();
-    }
-
-    start() {
-
-        let mesh = new Mesh(() => {
-            drawCube();
-        });
-
-        this.addComponent(new MeshRenderer(mesh));
-    }
 }

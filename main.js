@@ -41,6 +41,8 @@ var RX = 0 ;
 var RY = 0 ;
 var RZ = 0 ;
 
+noise.seed(1234567890);
+
 var MS = [] ; // The modeling matrix stack
 var TIME = 0.0 ; // Realtime
 var TIME = 0.0 ; // Realtime
@@ -87,18 +89,7 @@ function isLoaded(im) {
     }
 }
 
-function loadFileTexture(tex, filename)
-{
-    tex.textureWebGL  = gl.createTexture();
-    tex.image = new Image();
-    tex.image.src = filename ;
-    tex.isTextureReady = false ;
-    tex.image.onload = function() { handleTextureLoaded(tex); }
-    // The image is going to be loaded asyncronously (lazy) which could be
-    // after the program continues to the next functions. OUCH!
-}
-
-function loadImageTexture(tex, image) {
+function loadImageTexture(tex, image, name) {
     tex.textureWebGL  = gl.createTexture();
     tex.image = new Image();
     //tex.image.src = "CheckerBoard-from-Memory" ;
@@ -115,24 +106,26 @@ function loadImageTexture(tex, image) {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); //Prevents t-coordinate wrapping (repeating)
     gl.bindTexture(gl.TEXTURE_2D, null);
 
+    tex.name = name ;
+
     tex.isTextureReady = true ;
 
 }
 
-function initTextures() {
-    
-    textureArray.push({}) ;
-    loadFileTexture(textureArray[textureArray.length-1],"sunset.bmp") ;
-    
-    textureArray.push({}) ;
-    loadFileTexture(textureArray[textureArray.length-1],"cubetexture.png") ;
-    
-    textureArray.push({}) ;
-    loadImageTexture(textureArray[textureArray.length-1],image2) ;
-    
-    
+function loadFileTexture(tex, filename, name = null)
+{
+    tex.textureWebGL  = gl.createTexture();
+    tex.image = new Image();
+    tex.image.src = filename ;
+    tex.isTextureReady = false ;
+    if( name != null )
+        tex.name = name ;
+    else
+        tex.name = filename ;
+    tex.image.onload = function() { handleTextureLoaded(tex); }
+    // The image is going to be loaded asyncronously (lazy) which could be
+    // after the program continues to the next functions. OUCH!
 }
-
 
 function handleTextureLoaded(textureObj) {
     gl.bindTexture(gl.TEXTURE_2D, textureObj.textureWebGL);
@@ -147,6 +140,28 @@ function handleTextureLoaded(textureObj) {
     console.log(textureObj.image.src) ;
     
     textureObj.isTextureReady = true ;
+}
+
+function initTextures() {
+    
+    textureArray.push({}) ;
+    loadFileTexture(textureArray[textureArray.length-1],"sunset.bmp") ;
+    
+    textureArray.push({}) ;
+    loadFileTexture(textureArray[textureArray.length-1],"cubetexture.png") ;
+    
+    textureArray.push({}) ;
+    loadImageTexture(textureArray[textureArray.length-1],image2,"image2") ;
+    
+}
+
+function findTextureByFilename(filename) {
+    for( var i = 0 ; i < textureArray.length ; i++ )
+    {
+        if( textureArray[i].image.src.indexOf(filename) != -1 )
+            return textureArray[i] ;
+    }   
+    return null ;
 }
 
 //----------------------------------------------------------------
@@ -581,3 +596,4 @@ function CameraController(element) {
         }
     };
 }
+

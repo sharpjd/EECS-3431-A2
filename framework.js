@@ -6,8 +6,8 @@
     - A MeshRenderer is a Component that draws a Mesh
     - An AnimationComponent is a Component that animates the Transform of the SceneObject it is attached to using Keyframes and interpolation
     
-    - In main.js, create a Scene, create SceneObjects, add Components/Childs to the SceneObjects, and add the SceneObjects to Scene.SCENEOBJECTS array
-    - In the render loop, call scene.render() to init, start and update all SceneObjects in the scene
+    - In scene.js, create a Scene, create SceneObjects, add Components/Childs to the SceneObjects, and add the SceneObjects to Scene.SCENEOBJECTS array
+    - In main.js and in the render loop, call scene.render() to init, start and update all SceneObjects in the scene
 */
 
 const DEBUG = true; //disable for some performance i guess
@@ -23,15 +23,11 @@ function tMatrix(matrix) {
 class Scene {
     constructor() {
         this.TIME = 0;              //current time since the start of the scene
-        this.DELTATIME = 0;         //time difference between current frame and previous frame
+        this.DELTATIME = 0.016;         //time difference between current frame and previous frame
         this.SCENESTARTED = false;  //indicates if the scene has been started
         this.SCENEOBJECTS = [];     //contains all the SceneObjects in the scene 
     }
     render() {
-        if(this.TIME == 0) {
-            this.SCENESTARTED = false;
-        }
-
         if(DEBUG) {
             for( var i = this.SCENEOBJECTS.length-1; i >= 0; i-- ) {
                 if(!(this.SCENEOBJECTS[i] instanceof SceneObject)) {
@@ -49,6 +45,7 @@ class Scene {
                 this.SCENEOBJECTS[i].start();
             }
             this.SCENESTARTED = true;
+            window.requestAnimFrame(render);
         }
 
         for( var i = this.SCENEOBJECTS.length-1; i >= 0; i-- ) {
@@ -79,6 +76,7 @@ class Component {
     constructor() {
         this.root;
         this.scene;
+        this.isActive = true;
     }
     init(root, scene) {
         this.root = root;
@@ -115,10 +113,11 @@ class SceneObject {
             this.transformSceneObject();
             if(this.isActive && !this.isDestroyed) {
                 for(let component of this.components) {
-                    component.update();
+                    if(component.isActive) component.update();
+                    
                 }
                 for(let child of this.children) {
-                    child.update();
+                    if(child.isActive) child.update();
                 }
             }
         });
@@ -133,13 +132,16 @@ class SceneObject {
     start() {
         console.log("Starting SceneObject: " );
         console.log(this);
-        for(let component of this.components) {
-            component.start();
-        }
-        for(let child of this.children) {
-            child.init(this.scene);
-            child.start();
-        }
+        tMatrix(() => {
+            this.transformSceneObject();
+            for(let component of this.components) {
+                component.start();
+            }
+            for(let child of this.children) {
+                child.init(this.scene);
+                child.start();
+            }
+        });
     }
 
     addComponent(component) {
@@ -148,6 +150,11 @@ class SceneObject {
             throw new Error("Invalid component added to SceneObject.");
         }
         this.components.push(component);
+        if(this.scene != null && this.scene.SCENESTARTED) { //if the scene has already started, init and start the component immediately
+            component.init(this, this.scene);
+            component.start();
+        }
+        
     }
     addChild(child) {
         if(DEBUG && !(child instanceof SceneObject)) {
@@ -155,6 +162,10 @@ class SceneObject {
             throw new Error("Invalid child added to SceneObject.");
         }
         this.children.push(child);
+        if(this.scene != null && this.scene.SCENESTARTED) { //if the scene has already started, init and start the child immediately
+            child.init(this.scene);
+            child.start();
+        }
     }
     getComponent(componentType) { //pass the component class type as argument
         for(let component of this.components) {
@@ -207,10 +218,18 @@ class Keyframe {
     }
 }
 
+class Callbackframe {
+    constructor(timestamp, callback) {
+        this.timestamp = timestamp;
+        this.callback = callback;
+    }
+}
+
 class AnimationComponent extends Component {
-    constructor(keyframes=[]) {
+    constructor(keyframes=[], callbacks=[]) {
         super();
         this.keyframes = keyframes;
+        this.callbacks = callbacks;
         this.currentKeyframe = new Keyframe();
         this.targetKeyframe = new Keyframe();
 
@@ -229,6 +248,12 @@ class AnimationComponent extends Component {
         } else {
             return;
         }
+
+        for(let callback of this.callbacks) {
+            if(this.currentTime >= callback.timestamp && (this.currentTime - this.scene.DELTATIME) < callback.timestamp) {
+                callback.callback();
+            }
+        }
         
         if(this.isLooped) { 
             this.currentTime %= this.animationLength;
@@ -236,34 +261,28 @@ class AnimationComponent extends Component {
             this.currentTime = this.animationLength;
         }
         
-        for(let i = 0; i < this.keyframes.length - 1; i++) {
-            if(this.currentTime >= this.keyframes[i].timestamp && this.currentTime < this.keyframes[i + 1].timestamp) {
-                this.currentKeyframe = this.keyframes[i];
-                this.targetKeyframe = this.keyframes[i + 1];
-                break;
+        if(this.keyframes != null && this.keyframes.length >= 2) {
+            for(let i = 0; i < this.keyframes.length - 1; i++) {
+                if(this.currentTime >= this.keyframes[i].timestamp && this.currentTime < this.keyframes[i + 1].timestamp) {
+                    this.currentKeyframe = this.keyframes[i];
+                    this.targetKeyframe = this.keyframes[i + 1];
+                    break;
+                }
             }
+            let totalTime = this.targetKeyframe.timestamp - this.currentKeyframe.timestamp;
+            let time = this.currentTime - this.currentKeyframe.timestamp;
+            
+            this.root.transform = this.currentKeyframe.matrixInterpolation(
+                this.currentKeyframe.targetTransform,
+                this.targetKeyframe.targetTransform,
+                time,
+                totalTime
+            );
         }
-        let totalTime = this.targetKeyframe.timestamp - this.currentKeyframe.timestamp;
-        let time = this.currentTime - this.currentKeyframe.timestamp;
-        
-        this.root.transform = this.currentKeyframe.matrixInterpolation(
-            this.currentKeyframe.targetTransform,
-            this.targetKeyframe.targetTransform,
-            time,
-            totalTime
-        );
     }
     
     start() {
         this.keyframes.sort((a, b) => a.timestamp - b.timestamp);
-
-        if(this.keyframes.length == 0) {
-            let initialKeyframe1 = new Keyframe(0.0, root.transform);
-            let initialKeyframe2 = new Keyframe(1.0, root.transform);
-            this.keyframes.push(initialKeyframe1);
-            this.keyframes.push(initialKeyframe2);
-
-        }
 
         if(this.keyframes.length > 0) {
             this.animationLength = this.keyframes[this.keyframes.length - 1].timestamp;
@@ -285,7 +304,10 @@ class AnimationComponent extends Component {
 class CameraControllerComponent extends Component {
     constructor() {
         super();
-        this.moveSpeed = 30.0;   // units per second
+        this.enableLookObject = true;
+        this.lookObject = null;     // the scene object the camera is looking at
+        this.lookSpeed = 5.0;
+        this.moveSpeed = 30.0;      // units per second
         this.keys = {};
     }
     update() {
@@ -293,25 +315,35 @@ class CameraControllerComponent extends Component {
         let moveSpeed = this.moveSpeed;
         let keys = this.keys;
 
-        console.log(this.scene);
-
         let forward = normalize(subtract(at, eye));
         let right = normalize(cross(forward, up));
 
-        if (keys['w']) eye = add(eye, scalev(moveSpeed * deltaTime, forward));
-        if (keys['s']) eye = subtract(eye, scalev(moveSpeed * deltaTime, forward));
+        if (keys['w']) this.root.transform.translation = add(this.root.transform.translation, scalev(moveSpeed * deltaTime, forward));
+        if (keys['s']) this.root.transform.translation = subtract(this.root.transform.translation, scalev(moveSpeed * deltaTime, forward)); 
+        if (keys['a']) this.root.transform.translation = subtract(this.root.transform.translation, scalev(moveSpeed * deltaTime, right));
+        if (keys['d']) this.root.transform.translation = add(this.root.transform.translation, scalev(moveSpeed * deltaTime, right));
+        if (keys[' ']) this.root.transform.translation = add(this.root.transform.translation, scalev(moveSpeed * deltaTime, up));
+        if (keys['shift']) this.root.transform.translation = subtract(this.root.transform.translation, scalev(moveSpeed * deltaTime, up));
 
-        if (keys['a']) eye = subtract(eye, scalev(moveSpeed * deltaTime, right));
-        if (keys['d']) eye = add(eye, scalev(moveSpeed * deltaTime, right));
+        eye = this.root.transform.translation;
 
-        if (keys[' ']) eye = add(eye, scalev(moveSpeed * deltaTime, up));
-        if (keys['shift']) eye = subtract(eye, scalev(moveSpeed * deltaTime, up));
-
-        at = add(eye, forward);
-
-        console.log("Camera position: " + eye);
+        if(this.lookObject == null || this.enableLookObject == false) {
+            at = add(eye, forward);
+        } else {
+            //at = this.lookObject.transform.translation;
+            let speed = this.lookSpeed * (deltaTime != null ? deltaTime : 0.016);
+            at = mix( this.lookObject.transform.translation, at, speed);
+            
+        }
+        
+        if(this.scene.TIME % 0.5 == 0) {
+            console.log("Camera position: " + eye);
+            console.log("Camera at: " + at);
+        }
+        
 
         viewMatrix = lookAt(eye, at, up);
+
         modelViewMatrix = mult(viewMatrix, modelMatrix);
 
         gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix));
@@ -321,6 +353,11 @@ class CameraControllerComponent extends Component {
     start() {
         window.addEventListener("keydown", (e) => { this.keys[e.key.toLowerCase()] = true; });
         window.addEventListener("keyup", (e) => { this.keys[e.key.toLowerCase()] = false; });
+    }
+
+    setLookObject(sceneObject) {
+        this.previousLookObject = this.lookObject;
+        this.lookObject = sceneObject;
     }
 
 }

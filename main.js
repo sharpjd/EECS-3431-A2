@@ -387,66 +387,14 @@ function gPush() {
 }
 
 // ========================================================
-var scene = new Scene();
-
-// Camera controller
-var camera_controller = new SceneObject();
-camera_controller.addComponent( new CameraControllerComponent() );
-scene.SCENEOBJECTS.push( camera_controller );
-
-// Random Placer test
-var asteroid_random_placer = new SceneObject();
-var asteroid_random_placer_component = new AsteroidRandomPlacer();
-asteroid_random_placer.addComponent( asteroid_random_placer_component );
-scene.SCENEOBJECTS.push( asteroid_random_placer );
-
-// Testing model (delete later)
-var so_cube = new SceneObject();
-var mesh_cube = new Mesh(() => {
-   drawCube(); 
-});
-
-var kf_cube = [
-    new Keyframe(0.0, new Transform(vec3(0.0, -3.0, 0.0), vec3(0.0, 0.0, 60.0), vec3(1.0, 1.0, 1.0))), 
-    new Keyframe(1.0, new Transform(vec3(0.0, 0.0, 0.0), vec3(0.0, 90.0, 0.0), vec3(2.0, 2.0, 2.0))),
-    new Keyframe(3.0, new Transform(vec3(0.0, -3.0, 0.0), vec3(0.0, 180.0, 0.0), vec3(1.0, 1.0, 1.0)))
-];
-
-var ac_cube = new AnimationComponent(kf_cube);
-ac_cube.offsetKeyframes = 0.0;
-ac_cube.isLooped = true;
-
-so_cube.addComponent(ac_cube);
-so_cube.addComponent(new MeshRenderer(mesh_cube));
-
-// Testing Child
-var so_child = new SceneObject();
-var mesh_child = new Mesh(() => {
-   drawCone(); 
-});
-
-so_child.addComponent(new MeshRenderer(mesh_child));
-so_child.transform.translation = vec3(0.0, 3.0, 0.0);
-var kf_child = [
-    new Keyframe(1.0, new Transform(vec3(0.0, 3.0, 0.0), vec3(640.0, 360.0, 150.0), vec3(2.0, 2.0, 2.0))),
-    new Keyframe(3.0, new Transform(vec3(0.0, 3.0, 0.0), vec3(0.0, 720.0, 0.0), vec3(1.0, 1.0, 1.0)))
-];
-
-var ac_child = new AnimationComponent(kf_child);
-ac_child.isLooped = true;
-so_child.addComponent(ac_child);
-so_cube.addChild(so_child); // add child to parent
-
-scene.SCENEOBJECTS.push(so_cube); // add parent to scene
-
-// ========================================================
 function render() {
     
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
    
     // set the projection matrix
-    projectionMatrix = ortho(left, right, bottom, ytop, near, far);
-    
+    //projectionMatrix = ortho(left, right, bottom, ytop, near, far);
+    projectionMatrix = perspective(60, canvas.width/canvas.height, near, far);
+
     // set the camera matrix
     viewMatrix = lookAt(eye, at , up);
     
@@ -474,7 +422,7 @@ function render() {
         }
 
         deltaTime = curTime - prevTime;
-        TIME += deltaTime;
+        TIME += deltaTime; 
         prevTime = curTime;
     }
 
@@ -586,8 +534,8 @@ function CameraController(element) {
             controller.curX = curX;
             controller.curY = curY;
             // Update the X and Y rotation angles based on the mouse motion.
-            controller.yRot = (controller.yRot + deltaX) % 360;
-            controller.xRot = (controller.xRot + deltaY);
+            controller.yRot = (controller.yRot - deltaX) % 360;
+            controller.xRot = (controller.xRot - deltaY);
             // Clamp the X rotation to prevent the camera from going upside
             // down.
             if (controller.xRot < -90) {

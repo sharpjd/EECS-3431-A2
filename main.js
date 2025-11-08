@@ -394,6 +394,12 @@ var camera_controller = new SceneObject();
 camera_controller.addComponent( new CameraControllerComponent() );
 scene.SCENEOBJECTS.push( camera_controller );
 
+// Random Placer test
+var asteroid_random_placer = new SceneObject();
+var asteroid_random_placer_component = new AsteroidRandomPlacer();
+asteroid_random_placer.addComponent( asteroid_random_placer_component );
+scene.SCENEOBJECTS.push( asteroid_random_placer );
+
 // Testing model (delete later)
 var so_cube = new SceneObject();
 var mesh_cube = new Mesh(() => {

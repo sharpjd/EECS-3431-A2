@@ -32,6 +32,8 @@ class Scene {
         if(this.SCENESTARTED == false) {
             for( var i = this.SCENEOBJECTS.length-1; i >= 0; i-- ) {
                 this.SCENEOBJECTS[i].init(this);
+            }
+            for( var i = this.SCENEOBJECTS.length-1; i >= 0; i-- ) {
                 this.SCENEOBJECTS[i].start();
             }
             this.SCENESTARTED = true;
@@ -113,7 +115,7 @@ class SceneObject {
     init(scene) {
         this.scene = scene;
         for(let component of this.components) {
-            component.init(this, scene);
+            component.init(this, this.scene);
         }
     }
     start() {
@@ -301,4 +303,51 @@ class CameraControllerComponent extends Component {
         window.addEventListener("keyup", (e) => { this.keys[e.key.toLowerCase()] = false; });
     }
 
+}
+
+/**
+ * Places a number of asteroids randomly within a rectangular area.
+ */
+class AsteroidRandomPlacer extends Component {
+    constructor(bottomLeft = vec3(-1,-1,-1), topRight = vec3(1,1,1), count = 10) {
+        super();
+        this.bottomLeft = bottomLeft;
+        this.topRight = topRight;
+        this.count = count;
+
+        this.spawns = [];
+    }
+    
+    start() {
+        
+        for(let i = 0; i < this.count; i++) {
+            let x = Math.random() * (this.topRight[0] - this.bottomLeft[0]) + this.bottomLeft[0];
+            let y = Math.random() * (this.topRight[1] - this.bottomLeft[1]) + this.bottomLeft[1];
+            let z = Math.random() * (this.topRight[2] - this.bottomLeft[2]) + this.bottomLeft[2];
+
+            let pos = vec3(x, y, z);
+            let asteroid = new Asteroid();
+            asteroid.transform.translation = pos;
+
+            this.scene.SCENEOBJECTS.push(asteroid);
+
+            this.spawns.push(asteroid);
+        }
+    }
+
+}
+
+class Asteroid extends SceneObject {
+    constructor() {
+        super();
+    }
+
+    start() {
+
+        let mesh = new Mesh(() => {
+            drawCube();
+        });
+
+        this.addComponent(new MeshRenderer(mesh));
+    }
 }

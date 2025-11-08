@@ -33,7 +33,7 @@ var ambientColor, diffuseColor, specularColor;
 var modelMatrix, viewMatrix ;
 var modelViewMatrix, projectionMatrix, normalMatrix;
 var modelViewMatrixLoc, projectionMatrixLoc, normalMatrixLoc;
-var eye;
+var eye = vec3(0.0, 0.0, 10.0);
 var at = vec3(0.0, 0.0, 0.0);
 var up = vec3(0.0, 1.0, 0.0);
 
@@ -374,6 +374,11 @@ function gPush() {
 // ========================================================
 var scene = new Scene();
 
+// Camera controller
+var camera_controller = new SceneObject();
+camera_controller.addComponent( new CameraControllerComponent() );
+scene.SCENEOBJECTS.push( camera_controller );
+
 // Testing model (delete later)
 var so_cube = new SceneObject();
 var mesh_cube = new Mesh(() => {
@@ -417,10 +422,6 @@ scene.SCENEOBJECTS.push(so_cube); // add parent to scene
 function render() {
     
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    
-    
-    eye = vec3(0,0,10);
-    eye[1] = eye[1] + 0 ;
    
     // set the projection matrix
     projectionMatrix = ortho(left, right, bottom, ytop, near, far);
@@ -442,20 +443,23 @@ function render() {
     
     // get real time
     var curTime ;
-    if( animFlag )
-    {
-        curTime = (new Date()).getTime() /1000 ;
-        if( resetTimerFlag ) {
-            prevTime = curTime ;
-            resetTimerFlag = false ;
+    var deltaTime;
+    if (animFlag) {
+        curTime = (new Date()).getTime() / 1000;
+
+        if (resetTimerFlag) {
+            prevTime = curTime;
+            resetTimerFlag = false;
         }
-        TIME = TIME + curTime - prevTime ;
-        prevTime = curTime ;
+
+        deltaTime = curTime - prevTime;
+        TIME += deltaTime;
+        prevTime = curTime;
     }
 
     // ========== SCENE RENDER LOOP ==============
     scene.TIME = TIME ;
-    scene.DELTATIME = curTime - prevTime ;
+    scene.DELTATIME = deltaTime ;
     scene.render();
     // ===========================================
 

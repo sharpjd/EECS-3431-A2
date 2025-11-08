@@ -259,3 +259,46 @@ class AnimationComponent extends Component {
     }
 
 }
+
+class CameraControllerComponent extends Component {
+    constructor() {
+        super();
+        this.moveSpeed = 30.0;   // units per second
+        this.keys = {};
+    }
+    update() {
+        let deltaTime = this.scene.DELTATIME;
+        let moveSpeed = this.moveSpeed;
+        let keys = this.keys;
+
+        console.log(this.scene);
+
+        let forward = normalize(subtract(at, eye));
+        let right = normalize(cross(forward, up));
+
+        if (keys['w']) eye = add(eye, scalev(moveSpeed * deltaTime, forward));
+        if (keys['s']) eye = subtract(eye, scalev(moveSpeed * deltaTime, forward));
+
+        if (keys['a']) eye = subtract(eye, scalev(moveSpeed * deltaTime, right));
+        if (keys['d']) eye = add(eye, scalev(moveSpeed * deltaTime, right));
+
+        if (keys[' ']) eye = add(eye, scalev(moveSpeed * deltaTime, up));
+        if (keys['shift']) eye = subtract(eye, scalev(moveSpeed * deltaTime, up));
+
+        at = add(eye, forward);
+
+        console.log("Camera position: " + eye);
+
+        viewMatrix = lookAt(eye, at, up);
+        modelViewMatrix = mult(viewMatrix, modelMatrix);
+
+        gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix));
+    }
+
+    
+    start() {
+        window.addEventListener("keydown", (e) => { this.keys[e.key.toLowerCase()] = true; });
+        window.addEventListener("keyup", (e) => { this.keys[e.key.toLowerCase()] = false; });
+    }
+
+}

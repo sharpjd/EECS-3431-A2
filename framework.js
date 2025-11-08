@@ -10,6 +10,8 @@
     - In the render loop, call scene.render() to init, start and update all SceneObjects in the scene
 */
 
+const DEBUG = true; //disable for some performance i guess
+
 function tMatrix(matrix) {
     gPush();
     {
@@ -23,12 +25,22 @@ class Scene {
         this.TIME = 0;              //current time since the start of the scene
         this.DELTATIME = 0;         //time difference between current frame and previous frame
         this.SCENESTARTED = false;  //indicates if the scene has been started
-        this.SCENEOBJECTS = [];     //contains all the SceneObjects in the scene
+        this.SCENEOBJECTS = [];     //contains all the SceneObjects in the scene 
     }
     render() {
         if(this.TIME == 0) {
             this.SCENESTARTED = false;
         }
+
+        if(DEBUG) {
+            for( var i = this.SCENEOBJECTS.length-1; i >= 0; i-- ) {
+                if(!(this.SCENEOBJECTS[i] instanceof SceneObject)) {
+                    console.error("SceneObject at index " + i + " is not an instance of SceneObject. It is of type " + typeof(this.SCENEOBJECTS[i]) + ". Make sure to only add SceneObjects to the SCENEOBJECTS array.");
+                    throw new Error("Invalid SceneObject in SCENEOBJECTS array.");
+                }
+            }
+        }
+
         if(this.SCENESTARTED == false) {
             for( var i = this.SCENEOBJECTS.length-1; i >= 0; i-- ) {
                 this.SCENEOBJECTS[i].init(this);
@@ -131,9 +143,17 @@ class SceneObject {
     }
 
     addComponent(component) {
+        if(DEBUG && !(component instanceof Component)) {
+            console.error("Tried to add a component that is not an instance of Component. It is of type " + typeof(component) + ".");
+            throw new Error("Invalid component added to SceneObject.");
+        }
         this.components.push(component);
     }
     addChild(child) {
+        if(DEBUG && !(child instanceof SceneObject)) {
+            console.error("Tried to add a child that is not an instance of SceneObject. It is of type " + typeof(child) + ".");
+            throw new Error("Invalid child added to SceneObject.");
+        }
         this.children.push(child);
     }
     getComponent(componentType) { //pass the component class type as argument

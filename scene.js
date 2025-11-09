@@ -39,9 +39,6 @@ so_cube.addComponent(ac_cube);
 var so_cube_mesh_renderer = new MeshRenderer(mesh_cube)
 so_cube.addComponent(so_cube_mesh_renderer);
 
-var so_cube_bloom_applier = new BloomApplier(so_cube_mesh_renderer);
-so_cube.addComponent(so_cube_bloom_applier);
-
 // Testing Child
 var so_child = new SceneObject();
 var mesh_child = new Mesh(() => {
@@ -61,6 +58,11 @@ so_child.addComponent(ac_child);
 so_cube.addChild(so_child); // add child to parent
 
 //scene.SCENEOBJECTS.push(so_cube); // add parent to scene
+
+var glow_cube = new SceneObject();
+var glowCubeMesh = new GlowCubeMesh();
+glow_cube.addComponent( new MeshRenderer( glowCubeMesh ) );
+scene.SCENEOBJECTS.push( glow_cube );
 
 // Camera controller
 var so_lookAt1 = new SceneObject();

@@ -38,6 +38,7 @@ class Scene {
         }
 
         if(this.SCENESTARTED == false) {
+            console.log("Initializing and starting scene...");
             for( var i = this.SCENEOBJECTS.length-1; i >= 0; i-- ) {
                 this.SCENEOBJECTS[i].init(this);
             }
@@ -211,60 +212,117 @@ class MeshRenderer extends Component {
     }
 }
 
-class BloomApplier extends Component {
-    constructor(meshRenderer) {
-        super();
-        this.meshRenderer = meshRenderer;
-        if (!(this.meshRenderer instanceof MeshRenderer)) {
-            console.error("BloomApplier requires a MeshRenderer instance.");
-            throw new Error("Invalid argument for BloomApplier.");
+var glow_program;
+var prev_program;
+var cubeVAO, cubeVertexCount;
+var glowCubeMesh_initialized = false;
+class GlowCubeMesh extends Mesh {
+    constructor() {
+        super(() => { this.draw_cube(); });
+    }
+
+    initialize() {
+        console.log("Initializing GlowCubeMesh");
+        if (cubeVAO) return;
+
+        if (!glow_program)
+            glow_program = initShaders(gl, "glow-vertex-shader", "glow-fragment-shader");
+
+        // === Lookup attributes ===
+        const aPosition = gl.getAttribLocation(glow_program, "aPosition");
+        const aColor    = gl.getAttribLocation(glow_program, "aColor");
+
+        // === Create and bind VAO ===
+        cubeVAO = gl.createVertexArray();
+        gl.bindVertexArray(cubeVAO);
+
+        // --- Position buffer ---
+        const posBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+            -0.5,-0.5,-0.5,  0.5,-0.5,-0.5,  0.5,0.5,-0.5,  -0.5,0.5,-0.5,
+            -0.5,-0.5, 0.5,  0.5,-0.5, 0.5,  0.5,0.5, 0.5,  -0.5,0.5, 0.5
+        ]), gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(aPosition);
+        gl.vertexAttribPointer(aPosition, 3, gl.FLOAT, false, 0, 0);
+
+        // --- Color buffer ---
+        const colBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, colBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+            1,0,0, 0,1,0, 0,0,1, 1,1,0,
+            1,0,1, 0,1,1, 1,1,1, 0,0,0
+        ]), gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(aColor);
+        gl.vertexAttribPointer(aColor, 3, gl.FLOAT, false, 0, 0);
+
+        // --- Index buffer (CRITICAL: must be bound while VAO is bound) ---
+        const indexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([
+            0,1,2,2,3,0, 4,5,6,6,7,4,
+            0,4,7,7,3,0, 1,5,6,6,2,1,
+            3,2,6,6,7,3, 0,1,5,5,4,0
+        ]), gl.STATIC_DRAW);
+
+        cubeVertexCount = 36;
+
+        gl.bindVertexArray(null);
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    }
+
+
+    draw_cube() {
+
+        if (!glowCubeMesh_initialized) {
+            this.initialize();
+            glowCubeMesh_initialized = true;
         }
-    }
 
-    start() {
-        // Load the glow shader program
-        this.glowProgram = initShaders(gl, "glow-vertex-shader", "glow-fragment-shader");
+        console.log("Drawing GlowCubeMesh");
+        prev_program = gl.getParameter(gl.CURRENT_PROGRAM);
 
-        this.glowColor = vec4(1.0, 0.8, 0.2, 1.0);  // golden glow
-        this.glowStrength = 0.5;
-    }
+        if (!glow_program) {
+            glow_program = initShaders(gl, "glow-vertex-shader", "glow-fragment-shader");
+        }
 
-    update() {
-        gPush();
-        gScale(1.01, 1.01, 1.01); // slightly scale up for halo effect
+        gl.useProgram(glow_program);
 
-        // Save the currently active shader
-        const prevProgram = gl.getParameter(gl.CURRENT_PROGRAM);
+        // === Set uniforms for this program ===
+        const modelViewMatrix = mult(viewMatrix, modelMatrix);
+        const normalMatrix = inverseTranspose(modelViewMatrix);
 
-        // Switch to glow shader
-        gl.useProgram(this.glowProgram);
+        gl.uniformMatrix4fv(
+            gl.getUniformLocation(glow_program, "modelViewMatrix"),
+            false,
+            flatten(modelViewMatrix)
+        );
+        gl.uniformMatrix4fv(
+            gl.getUniformLocation(glow_program, "normalMatrix"),
+            false,
+            flatten(normalMatrix)
+        );
+        gl.uniformMatrix4fv(
+            gl.getUniformLocation(glow_program, "projectionMatrix"),
+            false,
+            flatten(projectionMatrix)
+        );
 
-        // === SET UNIFORMS ===
-        const glowColorLoc = gl.getUniformLocation(this.glowProgram, "glowColor");
-        const glowStrengthLoc = gl.getUniformLocation(this.glowProgram, "glowStrength");
-        gl.uniform4fv(glowColorLoc, flatten(this.glowColor));
-        gl.uniform1f(glowStrengthLoc, this.glowStrength);
+        gl.uniform4fv(
+            gl.getUniformLocation(glow_program, "glowColor"),
+            flatten(vec4(1.0, 1.0, 1.0, 1.0))
+        );
+        gl.uniform1f(
+            gl.getUniformLocation(glow_program, "glowStrength"),
+            0.5
+        );
 
-        // === MATRICES ===
-        const mvLoc = gl.getUniformLocation(this.glowProgram, "modelViewMatrix");
-        const pLoc = gl.getUniformLocation(this.glowProgram, "projectionMatrix");
-        gl.uniformMatrix4fv(mvLoc, false, flatten(modelViewMatrix));
-        gl.uniformMatrix4fv(pLoc, false, flatten(projectionMatrix));
+        // === Draw ===
+        gl.bindVertexArray(cubeVAO);
+        gl.drawElements(gl.TRIANGLES, cubeVertexCount, gl.UNSIGNED_SHORT, 0);
+        gl.bindVertexArray(null);
 
-        // === RENDER STATE ===
-        gl.enable(gl.BLEND);
-        gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
-        gl.depthMask(false);
-
-        // DRAW MESH
-        
-
-        // === RESTORE STATE ===
-        gl.depthMask(true);
-        gl.disable(gl.BLEND);
-        gl.useProgram(prevProgram);
-
-        gPop();
+        gl.useProgram(prev_program);
     }
 }
 

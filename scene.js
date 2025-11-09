@@ -13,9 +13,9 @@ var so_ground = new SceneObject();
 // asteroid_random_placer.addComponent( asteroid_random_placer_component );
 // scene.SCENEOBJECTS.push( asteroid_random_placer );
 
-var mesh_ground = new Mesh(() => {
+var mesh_ground = new Mesh((s) => {
     gScale(20.0, 0.1, 20.0);
-    drawCube(); 
+    drawCube(s); 
 });
 so_ground.addComponent(new MeshRenderer(mesh_ground));
 scene.SCENEOBJECTS.push(so_ground);
@@ -23,8 +23,8 @@ scene.SCENEOBJECTS.push(so_ground);
 // Testing model (delete later)
 var so_cube = new SceneObject();
 
-var mesh_cube = new Mesh(() => {
-   drawCube(); 
+var mesh_cube = new Mesh((s) => {
+   drawCube(s); 
 });
 
 var kf_cube = [
@@ -36,16 +36,16 @@ var ac_cube = new AnimationComponent(kf_cube);
 ac_cube.isLooped = true;
 
 so_cube.addComponent(ac_cube);
-var so_cube_mesh_renderer = new MeshRenderer(mesh_cube)
+var so_cube_mesh_renderer = new MeshRenderer(mesh_cube, () => glow_program(
+    vec4(1.0, 0.0, 0.0, 1.0), // Red glow
+    0.8                      // Strong glow
+))
 so_cube.addComponent(so_cube_mesh_renderer);
-
-var so_cube_bloom_applier = new BloomApplier(so_cube_mesh_renderer);
-so_cube.addComponent(so_cube_bloom_applier);
 
 // Testing Child
 var so_child = new SceneObject();
-var mesh_child = new Mesh(() => {
-   drawCone(); 
+var mesh_child = new Mesh((s) => {
+   drawCone(s); 
 });
 
 so_child.addComponent(new MeshRenderer(mesh_child));
@@ -60,7 +60,7 @@ ac_child.isLooped = true;
 so_child.addComponent(ac_child);
 so_cube.addChild(so_child); // add child to parent
 
-//scene.SCENEOBJECTS.push(so_cube); // add parent to scene
+scene.SCENEOBJECTS.push(so_cube); // add parent to scene
 
 // Camera controller
 var so_lookAt1 = new SceneObject();

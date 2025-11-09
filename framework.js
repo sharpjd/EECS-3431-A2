@@ -48,12 +48,14 @@ class Scene {
             window.requestAnimFrame(render);
         }
 
-        for( var i = this.SCENEOBJECTS.length-1; i >= 0; i-- ) {
-            if(this.SCENEOBJECTS[i].scene == null) {
-                this.SCENEOBJECTS[i].init(this);
+        //if(this.SCENESTARTED == true) {
+            for( var i = this.SCENEOBJECTS.length-1; i >= 0; i-- ) {
+                if(this.SCENEOBJECTS[i].scene == null) {
+                    this.SCENEOBJECTS[i].init(this);
+                }
+                this.SCENEOBJECTS[i].update();
             }
-            this.SCENEOBJECTS[i].update();
-        }
+        //}
     }
 
     destroy(sceneObject) {
@@ -194,80 +196,68 @@ class SceneObject {
 }
 
 class Mesh {
-    constructor(draw) {
+    constructor(draw = (placeholder) => {console.warn("No draw function defined for this mesh.");}) {
         this.draw = draw; //draw is the function used to draw the mesh
     }
 }
 
 class MeshRenderer extends Component {
-    constructor(mesh=new Mesh()) {
+    constructor(mesh=new Mesh(), shaderProgram=() => default_program()) {
         super();
         this.mesh = mesh;
+        this.shaderProgram = shaderProgram;
     }
     update() {
         tMatrix(() => {
-            this.mesh.draw();
+            this.mesh.draw(this.shaderProgram());
         });
     }
 }
 
-class BloomApplier extends Component {
-    constructor(meshRenderer) {
-        super();
-        this.meshRenderer = meshRenderer;
-        if (!(this.meshRenderer instanceof MeshRenderer)) {
-            console.error("BloomApplier requires a MeshRenderer instance.");
-            throw new Error("Invalid argument for BloomApplier.");
-        }
+// copied from main.js, setMV()
+var default_shader;
+function default_program() {
+    if(glow_shader == null) {
+        glow_shader = initShaders(gl, "vertex-shader", "fragment-shader");
     }
 
-    start() {
-        // Load the glow shader program
-        this.glowProgram = initShaders(gl, "glow-vertex-shader", "glow-fragment-shader");
+    gl.useProgram(default_shader);
 
-        this.glowColor = vec4(1.0, 0.8, 0.2, 1.0);  // golden glow
-        this.glowStrength = 0.5;
-    }
+    const modelViewMatrixLoc = gl.getUniformLocation(default_shader, "modelViewMatrix");
+    const normalMatrixLoc = gl.getUniformLocation(default_shader, "normalMatrix");
 
-    update() {
-        gPush();
-        gScale(1.01, 1.01, 1.01); // slightly scale up for halo effect
+    modelViewMatrix = mult(viewMatrix,modelMatrix) ;
+    gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix) );
+    normalMatrix = inverseTranspose(modelViewMatrix) ;
+    gl.uniformMatrix4fv(normalMatrixLoc, false, flatten(normalMatrix) );
 
-        // Save the currently active shader
-        const prevProgram = gl.getParameter(gl.CURRENT_PROGRAM);
-
-        // Switch to glow shader
-        gl.useProgram(this.glowProgram);
-
-        // === SET UNIFORMS ===
-        const glowColorLoc = gl.getUniformLocation(this.glowProgram, "glowColor");
-        const glowStrengthLoc = gl.getUniformLocation(this.glowProgram, "glowStrength");
-        gl.uniform4fv(glowColorLoc, flatten(this.glowColor));
-        gl.uniform1f(glowStrengthLoc, this.glowStrength);
-
-        // === MATRICES ===
-        const mvLoc = gl.getUniformLocation(this.glowProgram, "modelViewMatrix");
-        const pLoc = gl.getUniformLocation(this.glowProgram, "projectionMatrix");
-        gl.uniformMatrix4fv(mvLoc, false, flatten(modelViewMatrix));
-        gl.uniformMatrix4fv(pLoc, false, flatten(projectionMatrix));
-
-        // === RENDER STATE ===
-        gl.enable(gl.BLEND);
-        gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
-        gl.depthMask(false);
-
-        // DRAW MESH
-        
-
-        // === RESTORE STATE ===
-        gl.depthMask(true);
-        gl.disable(gl.BLEND);
-        gl.useProgram(prevProgram);
-
-        gPop();
-    }
+    return default_shader;
 }
 
+var glow_shader;
+function glow_program(glowColor, glowStrength) {
+    if(glow_shader == null) {
+        glow_shader = initShaders(gl, "vertex-shader", "glow-fragment-shader");
+    }
+
+    gl.useProgram(glow_shader);
+
+    const modelViewMatrixLoc = gl.getUniformLocation(glow_shader, "modelViewMatrix");
+    const normalMatrixLoc = gl.getUniformLocation(glow_shader, "normalMatrix");
+
+    modelViewMatrix = mult(viewMatrix,modelMatrix) ;
+    gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix) );
+    normalMatrix = inverseTranspose(modelViewMatrix) ;
+    gl.uniformMatrix4fv(normalMatrixLoc, false, flatten(normalMatrix) );
+
+    const glowColorLoc = gl.getUniformLocation(glow_shader, "glowColor");
+    const glowStrengthLoc = gl.getUniformLocation(glow_shader, "glowStrength");
+    gl.uniform4fv(glowColorLoc, flatten(glowColor));
+    gl.uniform1f(glowStrengthLoc, glowStrength);
+
+    return glow_shader;
+
+}
 
 class Keyframe {
     constructor(timestamp, targetTransform) {

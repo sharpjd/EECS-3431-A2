@@ -3,7 +3,7 @@
 var canvas;
 var gl;
 
-var program ;
+var default_shader ;
 
 var near = 1;
 var far = 100;
@@ -172,21 +172,21 @@ function setColor(c)
     diffuseProduct = mult(lightDiffuse, c);
     specularProduct = mult(lightSpecular, materialSpecular);
     
-    gl.uniform4fv( gl.getUniformLocation(program,
+    gl.uniform4fv( gl.getUniformLocation(default_shader,
                                          "ambientProduct"),flatten(ambientProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
+    gl.uniform4fv( gl.getUniformLocation(default_shader,
                                          "diffuseProduct"),flatten(diffuseProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
+    gl.uniform4fv( gl.getUniformLocation(default_shader,
                                          "specularProduct"),flatten(specularProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
+    gl.uniform4fv( gl.getUniformLocation(default_shader,
                                          "lightPosition"),flatten(lightPosition) );
-    gl.uniform1f( gl.getUniformLocation(program, 
+    gl.uniform1f( gl.getUniformLocation(default_shader, 
                                         "shininess"),materialShininess );
 }
 
 function toggleTextures() {
     useTextures = 1 - useTextures ;
-    gl.uniform1i( gl.getUniformLocation(program,
+    gl.uniform1i( gl.getUniformLocation(default_shader,
                                          "useTextures"), useTextures );
 }
 
@@ -247,22 +247,22 @@ window.onload = function init() {
     //
     //  Load shaders and initialize attribute buffers
     //
-    program = initShaders( gl, "vertex-shader", "fragment-shader" );
-    gl.useProgram( program );
+    default_shader = initShaders( gl, "vertex-shader", "fragment-shader" );
+    gl.useProgram( default_shader );
     
  
     // Load canonical objects and their attributes
-    Cube.init(program);
-    Cylinder.init(9,program);
-    Cone.init(9,program) ;
-    Sphere.init(36,program) ;
+    Cube.init(default_shader);
+    Cylinder.init(9,default_shader);
+    Cone.init(9,default_shader) ;
+    Sphere.init(36,default_shader) ;
 
-    gl.uniform1i( gl.getUniformLocation(program, "useTextures"), useTextures );
+    gl.uniform1i( gl.getUniformLocation(default_shader, "useTextures"), useTextures );
 
     // record the locations of the matrices that are used in the shaders
-    modelViewMatrixLoc = gl.getUniformLocation( program, "modelViewMatrix" );
-    normalMatrixLoc = gl.getUniformLocation( program, "normalMatrix" );
-    projectionMatrixLoc = gl.getUniformLocation( program, "projectionMatrix" );
+    modelViewMatrixLoc = gl.getUniformLocation( default_shader, "modelViewMatrix" );
+    normalMatrixLoc = gl.getUniformLocation( default_shader, "normalMatrix" );
+    projectionMatrixLoc = gl.getUniformLocation( default_shader, "projectionMatrix" );
     
     // set a default material
     setColor(materialDiffuse) ;
@@ -315,7 +315,11 @@ window.onload = function init() {
 }
 
 // Sets the modelview and normal matrix in the shaders
-function setMV() {
+function default_program(shader) {
+
+    const modelViewMatrixLoc = gl.getUniformLocation(shader, "modelViewMatrix");
+    const normalMatrixLoc = gl.getUniformLocation(shader, "normalMatrix");
+
     modelViewMatrix = mult(viewMatrix,modelMatrix) ;
     gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix) );
     normalMatrix = inverseTranspose(modelViewMatrix) ;
@@ -325,28 +329,25 @@ function setMV() {
 // Sets the projection, modelview and normal matrix in the shaders
 function setAllMatrices() {
     gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix) );
-    setMV() ;
+    default_program(default_shader) ;
     
 }
 
 // Draws a 2x2x2 cube center at the origin
 // Sets the modelview matrix and the normal matrix of the global program
-function drawCube() {
-    setMV() ;
-    Cube.draw() ;
+function drawCube(program) {
+    Cube.draw(program) ;
 }
 
 // Draws a sphere centered at the origin of radius 1.0.
 // Sets the modelview matrix and the normal matrix of the global program
 function drawSphere() {
-    setMV() ;
     Sphere.draw() ;
 }
 // Draws a cylinder along z of height 1 centered at the origin
 // and radius 0.5.
 // Sets the modelview matrix and the normal matrix of the global program
 function drawCylinder() {
-    setMV() ;
     Cylinder.draw() ;
 }
 
@@ -354,7 +355,6 @@ function drawCylinder() {
 // and base radius 1.0.
 // Sets the modelview matrix and the normal matrix of the global program
 function drawCone() {
-    setMV() ;
     Cone.draw() ;
 }
 
@@ -435,15 +435,15 @@ function render() {
     
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, textureArray[0].textureWebGL);
-    gl.uniform1i(gl.getUniformLocation(program, "texture1"), 0);
+    gl.uniform1i(gl.getUniformLocation(default_shader, "texture1"), 0);
     
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, textureArray[1].textureWebGL);
-    gl.uniform1i(gl.getUniformLocation(program, "texture2"), 1);
+    gl.uniform1i(gl.getUniformLocation(default_shader, "texture2"), 1);
     
     gl.activeTexture(gl.TEXTURE2);
     gl.bindTexture(gl.TEXTURE_2D, textureArray[2].textureWebGL);
-    gl.uniform1i(gl.getUniformLocation(program, "texture3"), 2);
+    gl.uniform1i(gl.getUniformLocation(default_shader, "texture3"), 2);
     
     /*
     gTranslate(-4,0,0) ;

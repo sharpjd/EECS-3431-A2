@@ -257,11 +257,13 @@ Cube.init = function(program)
 }
 
 
-Cube.draw = function() {
+Cube.draw = function(program) {
     
     setAttribPointers(this) ;
     gl.frontFace(gl.CCW) ;
     gl.drawArrays( gl.TRIANGLES, 0, 36 );
+
+    setBuffers(this,program);
 }
 
 //-------------- Cylinder --------------

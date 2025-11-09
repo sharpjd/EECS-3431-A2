@@ -6,7 +6,7 @@ var gl;
 var program ;
 
 var near = 1;
-var far = 100;
+var far = 1000;
 
 
 var left = -6.0;
@@ -145,10 +145,10 @@ function handleTextureLoaded(textureObj) {
 function initTextures() {
     
     textureArray.push({}) ;
-    loadFileTexture(textureArray[textureArray.length-1],"sunset.bmp") ;
+    loadFileTexture(textureArray[textureArray.length-1],"textures/asteroid.png") ;
     
     textureArray.push({}) ;
-    loadFileTexture(textureArray[textureArray.length-1],"cubetexture.png") ;
+    loadFileTexture(textureArray[textureArray.length-1],"textures/transparent.png") ;
     
     textureArray.push({}) ;
     loadImageTexture(textureArray[textureArray.length-1],image2,"image2") ;
@@ -240,7 +240,7 @@ window.onload = function init() {
     if ( !gl ) { alert( "WebGL isn't available" ); }
 
     gl.viewport( 0, 0, canvas.width, canvas.height );
-    gl.clearColor( 0.5, 0.5, 1.0, 1.0 );
+    gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
     
     gl.enable(gl.DEPTH_TEST);
 
@@ -441,9 +441,9 @@ function render() {
     gl.bindTexture(gl.TEXTURE_2D, textureArray[1].textureWebGL);
     gl.uniform1i(gl.getUniformLocation(program, "texture2"), 1);
     
-    gl.activeTexture(gl.TEXTURE2);
-    gl.bindTexture(gl.TEXTURE_2D, textureArray[2].textureWebGL);
-    gl.uniform1i(gl.getUniformLocation(program, "texture3"), 2);
+    // gl.activeTexture(gl.TEXTURE2);
+    // gl.bindTexture(gl.TEXTURE_2D, textureArray[2].textureWebGL);
+    // gl.uniform1i(gl.getUniformLocation(program, "texture3"), 2);
     
     /*
     gTranslate(-4,0,0) ;

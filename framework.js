@@ -194,125 +194,6 @@ class SceneObject {
     }
 }
 
-class Mesh {
-    constructor(draw) {
-        this.draw = draw; //draw is the function used to draw the mesh
-    }
-}
-
-class MeshRenderer extends Component {
-    constructor(mesh=new Mesh()) {
-        super();
-        this.mesh = mesh;
-    }
-    update() {
-        tMatrix(() => {
-            this.mesh.draw();
-        });
-    }
-}
-
-var glow_program;
-var prev_program;
-var cubeVAO, cubeVertexCount;
-var glowCubeMesh_initialized = false;
-class GlowCubeMesh extends Mesh {
-    constructor() {
-        super(() => { this.draw_cube(); });
-    }
-
-    initialize() {
-        console.log("Initializing GlowCubeMesh");
-        if (cubeVAO) return;
-
-        if (!glow_program)
-            glow_program = initShaders(gl, "glow-vertex-shader", "glow-fragment-shader");
-        
-        const aPosition = gl.getAttribLocation(glow_program, "aPosition");
-        const aColor    = gl.getAttribLocation(glow_program, "aColor");
-
-        cubeVAO = gl.createVertexArray();
-        gl.bindVertexArray(cubeVAO);
-
-        const posBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-            -0.5,-0.5,-0.5,  0.5,-0.5,-0.5,  0.5,0.5,-0.5,  -0.5,0.5,-0.5,
-            -0.5,-0.5, 0.5,  0.5,-0.5, 0.5,  0.5,0.5, 0.5,  -0.5,0.5, 0.5
-        ]), gl.STATIC_DRAW);
-        gl.enableVertexAttribArray(aPosition);
-        gl.vertexAttribPointer(aPosition, 3, gl.FLOAT, false, 0, 0);
-
-        const indexBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([
-            0,1,2,2,3,0, 4,5,6,6,7,4,
-            0,4,7,7,3,0, 1,5,6,6,2,1,
-            3,2,6,6,7,3, 0,1,5,5,4,0
-        ]), gl.STATIC_DRAW);
-
-        cubeVertexCount = 36;
-
-        gl.bindVertexArray(null);
-        gl.bindBuffer(gl.ARRAY_BUFFER, null);
-    }
-
-
-    draw_cube() {
-
-        if (!glowCubeMesh_initialized) {
-            this.initialize();
-            glowCubeMesh_initialized = true;
-        }
-
-        console.log("Drawing GlowCubeMesh");
-        prev_program = gl.getParameter(gl.CURRENT_PROGRAM);
-
-        if (!glow_program) {
-            glow_program = initShaders(gl, "glow-vertex-shader", "glow-fragment-shader");
-        }
-
-        gl.useProgram(glow_program);
-
-        // === Set uniforms for this program ===
-        const modelViewMatrix = mult(viewMatrix, modelMatrix);
-        const normalMatrix = inverseTranspose(modelViewMatrix);
-
-        gl.uniformMatrix4fv(
-            gl.getUniformLocation(glow_program, "modelViewMatrix"),
-            false,
-            flatten(modelViewMatrix)
-        );
-        gl.uniformMatrix4fv(
-            gl.getUniformLocation(glow_program, "normalMatrix"),
-            false,
-            flatten(normalMatrix)
-        );
-        gl.uniformMatrix4fv(
-            gl.getUniformLocation(glow_program, "projectionMatrix"),
-            false,
-            flatten(projectionMatrix)
-        );
-
-        gl.uniform4fv(
-            gl.getUniformLocation(glow_program, "glowColor"),
-            flatten(vec4(1.0, 0.0, 0.0, 1.0))
-        );
-        gl.uniform1f(
-            gl.getUniformLocation(glow_program, "glowStrength"),
-            0.5
-        );
-
-        // === Draw ===
-        gl.bindVertexArray(cubeVAO);
-        gl.drawElements(gl.TRIANGLES, cubeVertexCount, gl.UNSIGNED_SHORT, 0);
-        gl.bindVertexArray(null);
-
-        gl.useProgram(prev_program);
-    }
-}
-
-
 class Keyframe {
     constructor(timestamp, targetTransform) {
         this.timestamp = timestamp;
@@ -338,6 +219,24 @@ class Callbackframe {
     constructor(timestamp, callback) {
         this.timestamp = timestamp;
         this.callback = callback;
+    }
+}
+
+class Mesh {
+    constructor(draw) {
+        this.draw = draw; //draw is the function used to draw the mesh
+    }
+}
+
+class MeshRenderer extends Component {
+    constructor(mesh=new Mesh()) {
+        super();
+        this.mesh = mesh;
+    }
+    update() {
+        tMatrix(() => {
+            this.mesh.draw();
+        });
     }
 }
 
@@ -479,32 +378,64 @@ class CameraControllerComponent extends Component {
 }
 
 /**
- * Places a number of asteroids randomly within a rectangular area.
+ * Places a number of Meshes randomly within a rectangular area.
+ * 
+ * positionMultiplerCurve supports a function returning range 0-1 that is called for each spawn (allows non-linear distribution)
  */
-class AsteroidRandomPlacer extends Component {
-    constructor(bottomLeft = vec3(-1,-1,-1), topRight = vec3(1,1,1), count = 10) {
+class RandomPlacer extends Component {
+    constructor(
+            {
+                mesh, 
+                positionMultiplierCurve=null, 
+                bottomLeft = vec3(-50,-50,-50), 
+                topRight = vec3(50,50,50), 
+                count = 100
+            }
+        )
+    {
         super();
+        this.mesh = mesh;
         this.bottomLeft = bottomLeft;
         this.topRight = topRight;
         this.count = count;
+        this.positionMultiplierCurve = positionMultiplierCurve;
+        
+        if(typeof mesh === "undefined" || !(mesh instanceof Mesh)) {
+            console.error("RandomPlacer: mesh is not an instance of Mesh.");
+            throw new Error("Invalid mesh passed to RandomPlacer.");
+        }
+
+        if(positionMultiplierCurve != null && typeof positionMultiplierCurve !== "function") {
+            console.error("RandomPlacer: positionMultiplierCurve is not a function.");
+            throw new Error("Invalid positionMultiplierCurve passed to RandomPlacer.");
+        }
 
         this.spawns = [];
     }
     
     start() {
-        
+
+        let positionMultiplier = 1.0;
+
         for(let i = 0; i < this.count; i++) {
+
+            if(this.positionMultiplierCurve != null && typeof this.positionMultiplierCurve === "function") {
+
+                positionMultiplier = this.positionMultiplierCurve();
+            }
+
             let x = Math.random() * (this.topRight[0] - this.bottomLeft[0]) + this.bottomLeft[0];
             let y = Math.random() * (this.topRight[1] - this.bottomLeft[1]) + this.bottomLeft[1];
             let z = Math.random() * (this.topRight[2] - this.bottomLeft[2]) + this.bottomLeft[2];
 
+            x *= positionMultiplier;
+            y *= positionMultiplier;
+            z *= positionMultiplier;
+
             let pos = vec3(x, y, z);
             let asteroid = new SceneObject();
 
-            let mesh = new Mesh(() => {
-                drawCube();
-            });
-            asteroid.addComponent(new MeshRenderer(mesh));
+            asteroid.addComponent(new MeshRenderer(this.mesh));
 
             asteroid.transform.translation = pos;
 

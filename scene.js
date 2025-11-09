@@ -1,25 +1,5 @@
 var scene = new Scene();
 
-var so_ground = new SceneObject();
-
-// // Camera controller
-// var camera_controller = new SceneObject();
-// camera_controller.addComponent( new CameraControllerComponent() );
-// scene.SCENEOBJECTS.push( camera_controller );
-
-// // Random Placer test
-// var asteroid_random_placer = new SceneObject();
-// var asteroid_random_placer_component = new AsteroidRandomPlacer();
-// asteroid_random_placer.addComponent( asteroid_random_placer_component );
-// scene.SCENEOBJECTS.push( asteroid_random_placer );
-
-var mesh_ground = new Mesh(() => {
-    gScale(20.0, 0.1, 20.0);
-    drawCube(); 
-});
-so_ground.addComponent(new MeshRenderer(mesh_ground));
-scene.SCENEOBJECTS.push(so_ground);
-
 // Testing model (delete later)
 var so_cube = new SceneObject();
 
@@ -119,3 +99,49 @@ var ac_camera_controller = new AnimationComponent(
 
 camera_controller.addComponent( ac_camera_controller );
 scene.SCENEOBJECTS.push( camera_controller );
+
+var asteroidSO = new SceneObject();
+var asteroidPlacer = new RandomPlacer(
+    {
+        mesh : new Mesh(() => {
+                drawCube();
+            })
+    }
+);
+asteroidSO.addComponent( asteroidPlacer );
+scene.SCENEOBJECTS.push( asteroidSO );
+
+var useTexturesPrev;
+var starsSO = new SceneObject();
+var starsPlacer = new RandomPlacer(
+    {
+        mesh : new Mesh(() => {
+            useTexturesPrev = useTextures;
+            useTextures = false;
+            gl.uniform1i( gl.getUniformLocation(program,
+                                        "useTextures"), useTextures );
+            setColor(vec4(1.0, 1.0, 1.0, 1.0));
+            gPush();{
+                gScale(0.5, 0.5, 0.5);
+                drawSphere();
+            }gPop();
+            useTextures = useTexturesPrev;
+            gl.uniform1i( gl.getUniformLocation(program,
+                                        "useTextures"), useTextures );
+        }),
+        positionMultiplierCurve : () => {
+            let random = Math.random();
+            //stars are way more likely to be far away than close
+
+            let mult = 0.5 + (1 - random ** 8)/2;
+            console.log("Star position multiplier: " + mult);
+            return mult;
+        },
+        dontSpawnNegativePosMult : true,
+        bottomLeft : vec3(-500,-500,-500), 
+        topRight : vec3(500,500,500), 
+        count : 500
+    }
+);
+starsSO.addComponent( starsPlacer );
+scene.SCENEOBJECTS.push( starsSO );

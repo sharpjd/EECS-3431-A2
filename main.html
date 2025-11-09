@@ -122,6 +122,31 @@ void main() {
 }
 </script>
 
+<script id="asteroid-vertex-shader" type="x-shader/x-vertex">#version 300 es
+precision mediump float;
+
+in vec4 aPosition;
+
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+
+void main() {
+    gl_Position = projectionMatrix * modelViewMatrix * aPosition;
+}
+</script>
+
+<script id="asteroid-fragment-shader" type="x-shader/x-fragment">#version 300 es
+precision mediump float;
+
+out vec4 fragColor;
+uniform vec4 glowColor;
+uniform float glowStrength;
+
+void main() {
+    fragColor = vec4(glowColor.rgb * glowStrength, 1.0);
+}
+</script>
+
 <script type="text/javascript" src="libs/perlin.js"></script>
 
 <script type="text/javascript" src="Common/webgl-utils.js"></script>
@@ -130,6 +155,7 @@ void main() {
 <script type="text/javascript" src="Common/MV.js"></script>
 <script type="text/javascript" src="objects.js"></script>
 <script type="text/javascript" src="framework.js"></script>
+<script type="text/javascript" src="meshes.js"></script>
 <script type="text/javascript" src="scene.js"></script>
 <script type="text/javascript" src="main.js"></script>
 

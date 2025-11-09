@@ -101,33 +101,24 @@ main()
 precision mediump float;
 
 in vec4 aPosition;
-in vec4 aColor;
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
 
-out vec4 vColor;
-
 void main() {
     gl_Position = projectionMatrix * modelViewMatrix * aPosition;
-    vColor = aColor;
 }
 </script>
 
 <script id="glow-fragment-shader" type="x-shader/x-fragment">#version 300 es
 precision mediump float;
 
-in vec4 vColor;
 out vec4 fragColor;
-
 uniform vec4 glowColor;
 uniform float glowStrength;
 
 void main() {
-    // basic glow by brightening the color
-    vec3 color = vColor.rgb + glowColor.rgb * glowStrength;
-
-    fragColor = vec4(color, 1.0);
+    fragColor = vec4(glowColor.rgb * glowStrength, 1.0);
 }
 </script>
 

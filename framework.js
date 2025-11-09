@@ -227,16 +227,13 @@ class GlowCubeMesh extends Mesh {
 
         if (!glow_program)
             glow_program = initShaders(gl, "glow-vertex-shader", "glow-fragment-shader");
-
-        // === Lookup attributes ===
+        
         const aPosition = gl.getAttribLocation(glow_program, "aPosition");
         const aColor    = gl.getAttribLocation(glow_program, "aColor");
 
-        // === Create and bind VAO ===
         cubeVAO = gl.createVertexArray();
         gl.bindVertexArray(cubeVAO);
 
-        // --- Position buffer ---
         const posBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
@@ -246,17 +243,6 @@ class GlowCubeMesh extends Mesh {
         gl.enableVertexAttribArray(aPosition);
         gl.vertexAttribPointer(aPosition, 3, gl.FLOAT, false, 0, 0);
 
-        // --- Color buffer ---
-        const colBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, colBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-            1,0,0, 0,1,0, 0,0,1, 1,1,0,
-            1,0,1, 0,1,1, 1,1,1, 0,0,0
-        ]), gl.STATIC_DRAW);
-        gl.enableVertexAttribArray(aColor);
-        gl.vertexAttribPointer(aColor, 3, gl.FLOAT, false, 0, 0);
-
-        // --- Index buffer (CRITICAL: must be bound while VAO is bound) ---
         const indexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([
@@ -310,7 +296,7 @@ class GlowCubeMesh extends Mesh {
 
         gl.uniform4fv(
             gl.getUniformLocation(glow_program, "glowColor"),
-            flatten(vec4(1.0, 1.0, 1.0, 1.0))
+            flatten(vec4(1.0, 0.0, 0.0, 1.0))
         );
         gl.uniform1f(
             gl.getUniformLocation(glow_program, "glowStrength"),

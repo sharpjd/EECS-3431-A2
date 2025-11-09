@@ -203,24 +203,59 @@ class BloomApplier extends Component {
     constructor(meshRenderer) {
         super();
         this.meshRenderer = meshRenderer;
-        if(!(this.meshRenderer instanceof MeshRenderer)) {
+        if (!(this.meshRenderer instanceof MeshRenderer)) {
             console.error("BloomApplier requires a MeshRenderer instance.");
             throw new Error("Invalid argument for BloomApplier.");
         }
     }
+
+    start() {
+        // Load the glow shader program
+        this.glowProgram = initShaders(gl, "glow-vertex-shader", "glow-fragment-shader");
+
+        this.glowColor = vec4(1.0, 0.8, 0.2, 1.0);  // golden glow
+        this.glowStrength = 0.5;
+    }
+
     update() {
         gPush();
-        gScale(1.2, 1.2, 1.2);
-        setColor(vec4(1.0, 0.8, 0.2, 0.3));
+        gScale(1.01, 1.01, 1.01); // slightly scale up for halo effect
+
+        // Save the currently active shader
+        const prevProgram = gl.getParameter(gl.CURRENT_PROGRAM);
+
+        // Switch to glow shader
+        gl.useProgram(this.glowProgram);
+
+        // === SET UNIFORMS ===
+        const glowColorLoc = gl.getUniformLocation(this.glowProgram, "glowColor");
+        const glowStrengthLoc = gl.getUniformLocation(this.glowProgram, "glowStrength");
+        gl.uniform4fv(glowColorLoc, flatten(this.glowColor));
+        gl.uniform1f(glowStrengthLoc, this.glowStrength);
+
+        // === MATRICES ===
+        const mvLoc = gl.getUniformLocation(this.glowProgram, "modelViewMatrix");
+        const pLoc = gl.getUniformLocation(this.glowProgram, "projectionMatrix");
+        gl.uniformMatrix4fv(mvLoc, false, flatten(modelViewMatrix));
+        gl.uniformMatrix4fv(pLoc, false, flatten(projectionMatrix));
+
+        // === RENDER STATE ===
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
-        
-        this.meshRenderer.mesh.draw(); 
+        gl.depthMask(false);
 
+        // DRAW MESH
+        
+
+        // === RESTORE STATE ===
+        gl.depthMask(true);
         gl.disable(gl.BLEND);
+        gl.useProgram(prevProgram);
+
         gPop();
     }
 }
+
 
 class Keyframe {
     constructor(timestamp, targetTransform) {

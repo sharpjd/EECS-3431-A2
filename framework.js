@@ -36,6 +36,9 @@ class Scene {
         }
 
         for( var i = this.SCENEOBJECTS.length-1; i >= 0; i-- ) {
+            if(this.SCENEOBJECTS[i].scene == null) {
+                this.SCENEOBJECTS[i].init(this);
+            }
             this.SCENEOBJECTS[i].update();
         }
     }
@@ -43,6 +46,8 @@ class Scene {
     destroy(sceneObject) {
         for( var i = this.SCENEOBJECTS.length-1; i >= 0; i-- ) {
             if(this.SCENEOBJECTS[i] == sceneObject) {
+                this.SCENEOBJECTS[i].children = [];
+                this.SCENEOBJECTS[i].components = [];
                 this.SCENEOBJECTS.splice(i, 1); //remove from array
                 console.log("Destroyed SceneObject " + sceneObject);
                 break;
@@ -154,6 +159,13 @@ class SceneObject {
         }
         return null;
     } 
+    getTransform() {
+        let tf = new Transform();
+        tf.translation = this.transform.translation;
+        tf.rotation = this.transform.rotation;
+        tf.scale = this.transform.scale;
+        return tf;
+    }
     destroy() {
         this.isDestroyed = true;
         this.scene.destroy(this);
@@ -186,8 +198,10 @@ class Keyframe {
 
     // this is a basic interpolation function that we will use for now
     matrixInterpolation(t1, t2, time, totalTime) {
+        
         let factor = time / totalTime;
         let transform = new Transform();
+        if(t2 == null || t1 == null)  return transform;
 
         transform.translation = mix(t2.translation, t1.translation, factor);
         transform.rotation = mix(t2.rotation, t1.rotation, factor);
@@ -316,8 +330,8 @@ class CameraControllerComponent extends Component {
         }
         
         if(this.scene.TIME % 0.5 == 0) {
-            console.log("Camera position: " + eye);
-            console.log("Camera at: " + at);
+            //console.log("Camera position: " + eye);
+            //console.log("Camera at: " + at);
         }
         
 
@@ -339,4 +353,88 @@ class CameraControllerComponent extends Component {
         this.lookObject = sceneObject;
     }
 
+}
+
+class ParticleSystem extends Component {
+    constructor(particleLayers=[]) {
+        super();
+        this.particleLayers = particleLayers;
+    }
+
+    init(root, scene) {
+        super.init(root, scene);
+        for(let layer of this.particleLayers) {
+            layer.init(root, scene);
+        }
+    }
+
+    update() {
+        for(let layer of this.particleLayers) {
+            layer.update(this.scene.DELTATIME);
+        }
+    }
+}
+
+class ParticleLayer extends Component{
+    constructor(mesh, direction = vec3(0.0, 1.0, 0.0), spread = 0.0, speed = 10.0, lifetime = 3.0, emissionRate = 15.0, emissionTime = 2.0) {
+        super();
+        this.mesh = mesh;
+        this.currentTime = 0.0;
+        this.cooldownTimer = 0.0;
+
+        this.direction = direction;
+        this.spread = spread;
+        this.speed = speed;
+        this.lifetime = lifetime;
+
+        this.emissionRate = emissionRate; //particles per second
+        this.emissionTime = emissionTime; //how long the particlelayer will emit particles for. a value of 0 means indefinite
+    }
+
+    update() {
+
+        if(this.scene.DELTATIME != null) {
+            this.cooldownTimer += this.scene.DELTATIME;
+            this.currentTime += this.scene.DELTATIME;
+
+            if(this.currentTime >= this.emissionTime && this.emissionTime != 0.0) {
+                return;
+            }
+        }
+        
+        if(this.cooldownTimer >= 1.0/this.emissionRate) {
+            this.cooldownTimer = 0;
+
+            let directionWithRot = normalize(add(this.direction, this.root.transform.rotation));
+            let directionWithSpread = vec3(
+                directionWithRot[0] + (Math.random() - 0.5) * this.spread,
+                directionWithRot[1] + (Math.random() - 0.5) * this.spread,
+                directionWithRot[2] + (Math.random() - 0.5) * this.spread
+            );
+
+            directionWithSpread = normalize(directionWithSpread);
+            directionWithSpread[0] *= this.speed;
+            directionWithSpread[1] *= this.speed;
+            directionWithSpread[2] *= this.speed;
+
+            let particle = new SceneObject();
+            particle.transform = this.root.getTransform();
+
+            let directionWithSpreadTranslation = add(directionWithSpread, this.root.transform.translation);
+
+            particle.addComponent(new MeshRenderer(this.mesh));
+            let ac_particle = new AnimationComponent(
+                [
+                    new Keyframe(this.scene.TIME, this.root.transform),
+                    new Keyframe(this.lifetime + this.scene.TIME, new Transform(directionWithSpreadTranslation, this.root.transform.rotation, vec3(0.0, 0.0, 0.0)))
+                ],
+                [
+                    new Callbackframe(this.lifetime + this.scene.TIME, () => { particle.destroy(); })
+                ]
+            );
+            particle.init(this.scene);
+            particle.addComponent(ac_particle);
+            this.scene.SCENEOBJECTS.push(particle);
+        }
+    }
 }

@@ -179,6 +179,7 @@ var PROTAGONIST_thruster_mesh = new Mesh(() => {
         drawCylinder();
 
         gScale(2, 2, 0.25);
+        
         drawCylinder(); //ring 1
 
         gScale(0.75, 0.75, 0.25);
@@ -313,6 +314,16 @@ var starsPlacer = new RandomPlacer(
 starsSO.addComponent( starsPlacer );
 scene.SCENEOBJECTS.push( starsSO );
 
+
+
+var sun_so = new SceneObject();
+sun_so.transform.translation = vec3(100, 10, -100);
+sun_so.transform.scale = vec3(50, 50, 50);
+var sun_mesh = new SunMesh();
+var sun_mesh_renderer = new MeshRenderer(sun_mesh);
+sun_so.addComponent(sun_mesh_renderer);
+scene.SCENEOBJECTS.push(sun_so);
+
 var asteroidPlacer = new SceneObject();
 var asteroidPlacerComponent = new AsteroidRandomPlacer(
     {
@@ -330,15 +341,6 @@ var asteroidPlacerComponent = new AsteroidRandomPlacer(
 asteroidPlacer.addComponent( asteroidPlacerComponent );
 scene.SCENEOBJECTS.push( asteroidPlacer );
 
-var sun_so = new SceneObject();
-sun_so.transform.translation = vec3(100, 10, -100);
-sun_so.transform.scale = vec3(50, 50, 50);
-var sun_mesh = new SunMesh();
-var sun_mesh_renderer = new MeshRenderer(sun_mesh);
-sun_so.addComponent(sun_mesh_renderer);
-scene.SCENEOBJECTS.push(sun_so);
-
-
 var projectile_so = new SceneObject();
 projectile_so.transform.translation = vec3(5, 0, -5);
 projectile_so.transform.scale = vec3(0.5, 0.5, 2);
@@ -347,3 +349,4 @@ var projectile_mesh_renderer = new MeshRenderer(projectile_mesh);
 projectile_so.addComponent(projectile_mesh_renderer);
 scene.SCENEOBJECTS.push(projectile_so);
 scene.SCENEOBJECTS.push( CAMERA );
+

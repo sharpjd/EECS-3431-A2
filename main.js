@@ -388,6 +388,7 @@ function gPush() {
     MS.push(modelMatrix) ;
 }
 
+var lastTimeDisplayedFPS = 0;
 // ========================================================
 function render() {
     
@@ -433,6 +434,10 @@ function render() {
     //ENEMY_mr.isActive = true;
     scene.DELTATIME = deltaTime ;
     scene.render();
+    if(TIME - lastTimeDisplayedFPS > 2){
+        lastTimeDisplayedFPS = TIME;
+        console.log("Framerate: " + 1/deltaTime)
+    }
     // ===========================================
 
     

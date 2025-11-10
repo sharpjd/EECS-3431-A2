@@ -58,7 +58,7 @@ var CAMERA_kf = [
 ]
 var CAMERA_cf = [
     
-    new Callbackframe(0.0, () => {
+    new Callbackframe(0.1, () => {
         CAMERA_controller.lookObject = PROTAGONIST;
     }),
     new Callbackframe(7.5, () => {
@@ -70,6 +70,10 @@ var CAMERA_cf = [
         PROTAGONIST.isActive = true;
         ENEMY_mr.isActive = true;
         CAMERA_controller.lookSpeed = 70;
+        for(let a of asteroidPlacerComponent.spawns){
+            //console.log(a);
+            a.getComponent(MeshRenderer).isActive = true;
+        }
     }),
     new Callbackframe(9.0, () => {
         CAMERA_controller.lookSpeed = 5.0;

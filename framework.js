@@ -635,6 +635,7 @@ class AsteroidRandomPlacer extends Component {
                 let asteroidMesh = new AsteroidMesh();
                 let asteroidMeshRenderer = new MeshRenderer(asteroidMesh);
                 asteroid.addComponent(asteroidMeshRenderer);
+                asteroidMeshRenderer.isActive = false;
 
                 asteroid.transform.translation = add(center, pos_offset);
                 asteroid.transform.rotation = rotation_offset;

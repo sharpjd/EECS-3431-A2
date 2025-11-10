@@ -140,7 +140,8 @@ var starsPlacer = new RandomPlacer(
         dontSpawnNegativePosMult : true,
         bottomLeft : vec3(-500,-500,-500), 
         topRight : vec3(500,500,500), 
-        count : 500
+        count : 500,
+        minDistance : 100
     }
 );
 starsSO.addComponent( starsPlacer );

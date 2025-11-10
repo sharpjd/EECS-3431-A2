@@ -389,6 +389,7 @@ class RandomPlacer extends Component {
                 positionMultiplierCurve=null, 
                 bottomLeft = vec3(-50,-50,-50), 
                 topRight = vec3(50,50,50), 
+                minDistance = 0,
                 count = 100
             }
         )
@@ -398,6 +399,7 @@ class RandomPlacer extends Component {
         this.bottomLeft = bottomLeft;
         this.topRight = topRight;
         this.count = count;
+        this.minDistance = minDistance;
         this.positionMultiplierCurve = positionMultiplierCurve;
         
         if(typeof mesh === "undefined" || !(mesh instanceof Mesh)) {
@@ -433,6 +435,11 @@ class RandomPlacer extends Component {
             z *= positionMultiplier;
 
             let pos = vec3(x, y, z);
+
+            if(length(pos) < this.minDistance){
+                pos = scale(pos, this.minDistance / length(pos));
+            }
+
             let asteroid = new SceneObject();
 
             asteroid.addComponent(new MeshRenderer(this.mesh));

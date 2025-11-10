@@ -529,3 +529,94 @@ class ParticleLayer extends Component{
         }
     }
 }
+
+/**
+ * Based on RandomPlacer. Places asteroids randomly within a rectangular area.
+ */
+class AsteroidRandomPlacer extends Component {
+    constructor(
+            {
+                positionMultiplierCurve=null, 
+                bottomLeft = vec3(-50,-50,-50), 
+                topRight = vec3(50,50,50), 
+                count = 100
+            } = {}
+        )
+    {
+        super();
+        this.bottomLeft = bottomLeft;
+        this.topRight = topRight;
+        this.count = count;
+        this.positionMultiplierCurve = positionMultiplierCurve;
+    
+
+        if(positionMultiplierCurve != null && typeof positionMultiplierCurve !== "function") {
+            console.error("RandomPlacer: positionMultiplierCurve is not a function.");
+            throw new Error("Invalid positionMultiplierCurve passed to RandomPlacer.");
+        }
+
+        this.spawns = [];
+    }
+    
+    start() {
+
+        let positionMultiplier = 1.0;
+
+        //individual asteroids
+        for(let i = 0; i < this.count; i++) {
+
+            if(this.positionMultiplierCurve != null && typeof this.positionMultiplierCurve === "function") {
+
+                positionMultiplier = this.positionMultiplierCurve();
+            }
+
+            //distribute randomly
+            let x = Math.random() * (this.topRight[0] - this.bottomLeft[0]) + this.bottomLeft[0];
+            let y = Math.random() * (this.topRight[1] - this.bottomLeft[1]) + this.bottomLeft[1];
+            let z = Math.random() * (this.topRight[2] - this.bottomLeft[2]) + this.bottomLeft[2];
+
+            x *= positionMultiplier;
+            y *= positionMultiplier;
+            z *= positionMultiplier;
+
+            let center = vec3(x, y, z);
+            let mainAsteroidPart;
+            //an asteroid contains multiple sub-asteroids to create lumpiness illusion
+            for(let i = 0; i < 4 + Math.floor(Math.random() * 6); i++) {
+
+                let pos_offset_scale = 2.0; // scale factor
+                let pos_offset = vec3(
+                    (Math.random() - 0.5) * pos_offset_scale,
+                    (Math.random() - 0.5) * pos_offset_scale,
+                    (Math.random() - 0.5) * pos_offset_scale
+                );
+
+                let scale_max = 2.0;
+                let scale_min = 0.5;
+                let scale = scale_min + Math.random() * (scale_max - scale_min);
+                let scale_offset = vec3(
+                    scale,
+                    scale,
+                    scale
+                );
+
+                let asteroid = new SceneObject();
+                let asteroidMesh = new AsteroidMesh();
+                let asteroidMeshRenderer = new MeshRenderer(asteroidMesh);
+                asteroid.addComponent(asteroidMeshRenderer);
+
+                asteroid.transform.translation = add(center, pos_offset);
+                asteroid.transform.scale = scale_offset;
+
+                if(mainAsteroidPart == null) {
+                    mainAsteroidPart = asteroid;
+                } else {
+                    mainAsteroidPart.addChild(asteroid);
+                }
+
+                this.scene.SCENEOBJECTS.push(asteroid);
+                this.spawns.push(asteroid);
+            }
+        }
+    }
+}

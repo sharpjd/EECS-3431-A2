@@ -12,12 +12,8 @@ class AsteroidMesh extends Mesh {
 
     }
 
-    drawAsteroidSphere() {
-        
-    }
-
     drawAsteroid() {
-        
+        drawSphere();
     }
 }
 

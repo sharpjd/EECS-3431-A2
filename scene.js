@@ -1,5 +1,7 @@
 var scene = new Scene();
 
+Math.seedrandom("big chungus++");
+
 // Testing model (delete later)
 var so_cube = new SceneObject();
 
@@ -100,16 +102,16 @@ var ac_camera_controller = new AnimationComponent(
 camera_controller.addComponent( ac_camera_controller );
 scene.SCENEOBJECTS.push( camera_controller );
 
-var asteroidSO = new SceneObject();
-var asteroidPlacer = new RandomPlacer(
-    {
-        mesh : new Mesh(() => {
-                drawCube();
-            })
-    }
-);
-asteroidSO.addComponent( asteroidPlacer );
-scene.SCENEOBJECTS.push( asteroidSO );
+// var asteroidSO = new SceneObject();
+// var asteroidPlacer = new RandomPlacer(
+//     {
+//         mesh : new Mesh(() => {
+//                 drawCube();
+//             })
+//     }
+// );
+// asteroidSO.addComponent( asteroidPlacer );
+// scene.SCENEOBJECTS.push( asteroidSO );
 
 var useTexturesPrev;
 var starsSO = new SceneObject();
@@ -132,9 +134,7 @@ var starsPlacer = new RandomPlacer(
         positionMultiplierCurve : () => {
             let random = Math.random();
             //stars are way more likely to be far away than close
-
             let mult = 0.5 + (1 - random ** 8)/2;
-            console.log("Star position multiplier: " + mult);
             return mult;
         },
         dontSpawnNegativePosMult : true,
@@ -145,3 +145,20 @@ var starsPlacer = new RandomPlacer(
 );
 starsSO.addComponent( starsPlacer );
 scene.SCENEOBJECTS.push( starsSO );
+
+var asteroidPlacer = new SceneObject();
+var asteroidPlacerComponent = new AsteroidRandomPlacer(
+    {
+        positionMultiplierCurve : () => {
+            let random = Math.random();
+            //asteroids are more likely to be CLOSER than far away
+            let mult = -(random ** 4) + 1;
+            return mult;
+        },
+        bottomLeft : vec3(-50,-50,-50), 
+        topRight : vec3(50,50,50), 
+        count : 50
+    }
+);
+asteroidPlacer.addComponent( asteroidPlacerComponent );
+scene.SCENEOBJECTS.push( asteroidPlacer );

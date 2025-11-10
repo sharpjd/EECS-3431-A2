@@ -25,7 +25,7 @@ class Scene {
         this.TIME = 0;              //current time since the start of the scene
         this.DELTATIME = 0.016;         //time difference between current frame and previous frame
         this.SCENESTARTED = false;  //indicates if the scene has been started
-        this.SCENEOBJECTS = [];     //contains all the SceneObjects in the scene 
+        this.SCENEOBJECTS = [];
     }
     render() {
         if(DEBUG) {
@@ -103,6 +103,7 @@ class SceneObject {
         this.children = [];
         this.isActive = true;
         this.isDestroyed = false;
+        this.root;
         this.scene;
     }
 
@@ -144,6 +145,7 @@ class SceneObject {
                 component.start();
             }
             for(let child of this.children) {
+                child.root = this;
                 child.init(this.scene);
                 child.start();
             }
@@ -169,6 +171,7 @@ class SceneObject {
         }
         this.children.push(child);
         if(this.scene != null && this.scene.SCENESTARTED) { //if the scene has already started, init and start the child immediately
+            child.root = this;
             child.init(this.scene);
             child.start();
         }
@@ -219,6 +222,7 @@ class Callbackframe {
     constructor(timestamp, callback) {
         this.timestamp = timestamp;
         this.callback = callback;
+        this.isActive = true;
     }
 }
 
@@ -347,7 +351,10 @@ class CameraControllerComponent extends Component {
         } else {
             //at = this.lookObject.transform.translation;
             let speed = this.lookSpeed * (deltaTime != null ? deltaTime : 0.016);
-            at = mix( this.lookObject.transform.translation, at, speed);
+            if(this.lookSpeed > 100)
+                at = this.lookObject.transform.translation;
+            else 
+                at = mix( this.lookObject.transform.translation, at, speed);
             
         }
         
@@ -457,6 +464,7 @@ class ParticleSystem extends Component {
     constructor(particleLayers=[]) {
         super();
         this.particleLayers = particleLayers;
+        this.canEmitParticles = true;
     }
 
     init(root, scene) {
@@ -467,6 +475,7 @@ class ParticleSystem extends Component {
     }
 
     update() {
+        if(!this.canEmitParticles) return;
         for(let layer of this.particleLayers) {
             layer.update(this.scene.DELTATIME);
         }
@@ -503,7 +512,14 @@ class ParticleLayer extends Component{
         if(this.cooldownTimer >= 1.0/this.emissionRate) {
             this.cooldownTimer = 0;
 
-            let directionWithRot = normalize(add(this.direction, this.root.transform.rotation));
+            let entityRoot = this.root; //the last root SceneObject
+            while(entityRoot.root != null) {
+                entityRoot = entityRoot.root;
+            }
+            
+            let directionWithRot = normalize(rotateDir(this.direction, entityRoot.transform.rotation));
+            //console.log(directionWithRot);
+
             let directionWithSpread = vec3(
                 directionWithRot[0] + (Math.random() - 0.5) * this.spread,
                 directionWithRot[1] + (Math.random() - 0.5) * this.spread,
@@ -516,15 +532,17 @@ class ParticleLayer extends Component{
             directionWithSpread[2] *= this.speed;
 
             let particle = new SceneObject();
-            particle.transform = this.root.getTransform();
+            particle.transform = entityRoot.getTransform();
+            particle.transform.scale = this.root.transform.scale;
 
-            let directionWithSpreadTranslation = add(directionWithSpread, this.root.transform.translation);
+            let directionWithSpreadTranslation = add(directionWithSpread, entityRoot.transform.translation);
 
             particle.addComponent(new MeshRenderer(this.mesh));
+            
             let ac_particle = new AnimationComponent(
                 [
-                    new Keyframe(this.scene.TIME, this.root.transform),
-                    new Keyframe(this.lifetime + this.scene.TIME, new Transform(directionWithSpreadTranslation, this.root.transform.rotation, vec3(0.0, 0.0, 0.0)))
+                    new Keyframe(this.scene.TIME, new Transform(entityRoot.transform.translation, entityRoot.transform.rotation, particle.transform.scale)),
+                    new Keyframe(this.lifetime + this.scene.TIME, new Transform(directionWithSpreadTranslation, entityRoot.rotation, vec3(0.0, 0.0, 0.0)))
                 ],
                 [
                     new Callbackframe(this.lifetime + this.scene.TIME, () => { particle.destroy(); })
@@ -633,4 +651,36 @@ class AsteroidRandomPlacer extends Component {
             }
         }
     }
+}
+
+function rotateDir(d, r) {
+    // convert deg → rad
+    const k = Math.PI/180;
+    let [x,y,z] = d.map(v=>v*k);
+    let [rx,ry,rz] = r.map(v=>v*k);
+
+    // create quaternion from Euler (YZX order)
+    const cy = Math.cos(ry/2), sy = Math.sin(ry/2);
+    const cx = Math.cos(rx/2), sx = Math.sin(rx/2);
+    const cz = Math.cos(rz/2), sz = Math.sin(rz/2);
+
+    const qw = cy*cx*cz + sy*sx*sz;
+    const qx = cy*sx*cz + sy*cx*sz;
+    const qy = sy*cx*cz - cy*sx*sz;
+    const qz = cy*cx*sz - sy*sx*cz;
+
+    // rotate vector
+    const vx = x, vy = y, vz = z;
+    const ix =  qw*vx + qy*vz - qz*vy;
+    const iy =  qw*vy + qz*vx - qx*vz;
+    const iz =  qw*vz + qx*vy - qy*vx;
+    const iw = -qx*vx - qy*vy - qz*vz;
+
+    const xr = ix*qw + iw*-qx + iy*-qz - iz*-qy;
+    const yr = iy*qw + iw*-qy + iz*-qx - ix*-qz;
+    const zr = iz*qw + iw*-qz + ix*-qy - iy*-qx;
+
+    // convert back to deg
+    const inv = 180/Math.PI;
+    return [xr*inv, yr*inv, zr*inv];
 }

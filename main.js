@@ -338,8 +338,9 @@ function drawCube() {
 
 // Draws a sphere centered at the origin of radius 1.0.
 // Sets the modelview matrix and the normal matrix of the global program
-function drawSphere() {
-    setMV() ;
+function drawSphere(doSetMV=true) {
+    if(doSetMV)
+        setMV();
     Sphere.draw() ;
 }
 // Draws a cylinder along z of height 1 centered at the origin

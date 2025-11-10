@@ -163,3 +163,11 @@ var asteroidPlacerComponent = new AsteroidRandomPlacer(
 );
 asteroidPlacer.addComponent( asteroidPlacerComponent );
 scene.SCENEOBJECTS.push( asteroidPlacer );
+
+var sun_so = new SceneObject();
+sun_so.transform.translation = vec3(100, 10, -100);
+sun_so.transform.scale = vec3(50, 50, 50);
+var sun_mesh = new SunMesh();
+var sun_mesh_renderer = new MeshRenderer(sun_mesh);
+sun_so.addComponent(sun_mesh_renderer);
+scene.SCENEOBJECTS.push(sun_so);

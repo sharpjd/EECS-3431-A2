@@ -107,7 +107,6 @@ class GlowCubeMesh extends Mesh {
 
         gl.useProgram(glow_program);
 
-        // === Set uniforms for this program ===
         const modelViewMatrix = mult(viewMatrix, modelMatrix);
         const normalMatrix = inverseTranspose(modelViewMatrix);
 
@@ -143,4 +142,68 @@ class GlowCubeMesh extends Mesh {
 
         gl.useProgram(prev_program);
     }
+}
+
+var sun_program;
+var sunVAO, sunVertexCount;
+var sun_initialized = false;
+class SunMesh extends Mesh { 
+    constructor() {
+        super(() => {
+            this.drawSun();
+        });
+    }
+
+    initialize(){
+
+    }
+
+    drawSun(){
+
+        if (!sun_initialized) {
+            this.initialize();
+            sun_initialized = true;
+        }
+
+        prev_program = gl.getParameter(gl.CURRENT_PROGRAM);
+
+        if (!sun_program) {
+            sun_program = initShaders(gl, "sun-vertex-shader", "sun-fragment-shader");
+        }
+
+        gl.useProgram(sun_program);
+
+        const modelViewMatrix = mult(viewMatrix, modelMatrix);
+        const normalMatrix = inverseTranspose(modelViewMatrix);
+
+        gl.uniformMatrix4fv(
+            gl.getUniformLocation(sun_program, "modelViewMatrix"),
+            false,
+            flatten(modelViewMatrix)
+        );
+
+        let n3 = mat3();
+        for (let i = 0; i < 3; i++)
+            for (let j = 0; j < 3; j++)
+                n3[i][j] = modelViewMatrix[i][j];
+        gl.uniformMatrix3fv(
+            gl.getUniformLocation(sun_program, "normalMatrix"),
+            false,
+            flatten(n3)
+        );
+        gl.uniformMatrix4fv(
+            gl.getUniformLocation(sun_program, "projectionMatrix"),
+            false,
+            flatten(projectionMatrix)
+        );
+
+        gl.uniform1f(gl.getUniformLocation(sun_program, "uTime"), scene.TIME / 1000.0);
+        gl.uniform3fv(gl.getUniformLocation(sun_program, "uSunColor"), vec3(1.0, 0.7, 0.1));  // orange core
+        gl.uniform3fv(gl.getUniformLocation(sun_program, "uGlowColor"), vec3(1.0, 0.2, 0.0)); // reddish edge
+
+        drawSphere(false);
+
+        gl.useProgram(prev_program);
+    }
+
 }

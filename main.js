@@ -346,8 +346,9 @@ function drawSphere(doSetMV=true) {
 // Draws a cylinder along z of height 1 centered at the origin
 // and radius 0.5.
 // Sets the modelview matrix and the normal matrix of the global program
-function drawCylinder() {
-    setMV() ;
+function drawCylinder(doSetMV=true) {
+    if(doSetMV)
+        setMV() ;
     Cylinder.draw() ;
 }
 

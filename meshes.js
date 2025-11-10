@@ -6,6 +6,9 @@ class AsteroidMesh extends Mesh {
         super(() => {
             this.drawAsteroid();
         });
+
+        //this.shape;
+        this.colorOffset;
     }
 
     initialize() {
@@ -13,7 +16,35 @@ class AsteroidMesh extends Mesh {
     }
 
     drawAsteroid() {
+
+        // if(this.shape == null)
+        //     this.shape = Math.floor(Math.random() * 2);
+
+        // if(this.shape == 0)
+        // {
+        if(this.colorOffset == null){
+            //color should be darker overall
+            let offset = (Math.random() - 1) * 0.3;
+            this.colorOffset = vec4(
+                offset,
+                offset,
+                offset,
+                0.0
+            );
+        }
+
+        gl.uniform4fv( gl.getUniformLocation(program, "offsetColor"), 
+            flatten(this.colorOffset) ) ;
         drawSphere();
+        // }
+            
+        // if(this.shape == 1){
+        //     gPush();
+        //     gScale(0.5, 0.5, 0.5);
+        //     drawCube();
+        //     gPop();
+        // }
+            
     }
 }
 

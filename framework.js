@@ -582,16 +582,16 @@ class AsteroidRandomPlacer extends Component {
             let center = vec3(x, y, z);
             let mainAsteroidPart;
             //an asteroid contains multiple sub-asteroids to create lumpiness illusion
-            for(let i = 0; i < 4 + Math.floor(Math.random() * 6); i++) {
+            for(let i = 0; i < 5 + Math.floor(Math.random() * 6); i++) {
 
-                let pos_offset_scale = 2.0; // scale factor
+                let pos_offset_scale = 1.8; // scale factor
                 let pos_offset = vec3(
                     (Math.random() - 0.5) * pos_offset_scale,
                     (Math.random() - 0.5) * pos_offset_scale,
                     (Math.random() - 0.5) * pos_offset_scale
                 );
 
-                let scale_max = 2.0;
+                let scale_max = 1.5;
                 let scale_min = 0.5;
                 let scale = scale_min + Math.random() * (scale_max - scale_min);
                 let scale_offset = vec3(
@@ -600,12 +600,19 @@ class AsteroidRandomPlacer extends Component {
                     scale
                 );
 
+                let rotation_offset = vec3(
+                    Math.random() * 360,
+                    Math.random() * 360,
+                    Math.random() * 360
+                );
+
                 let asteroid = new SceneObject();
                 let asteroidMesh = new AsteroidMesh();
                 let asteroidMeshRenderer = new MeshRenderer(asteroidMesh);
                 asteroid.addComponent(asteroidMeshRenderer);
 
                 asteroid.transform.translation = add(center, pos_offset);
+                asteroid.transform.rotation = rotation_offset;
                 asteroid.transform.scale = scale_offset;
 
                 if(mainAsteroidPart == null) {

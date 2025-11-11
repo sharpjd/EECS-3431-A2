@@ -61,9 +61,9 @@ var CAMERA_cf = [
     new Callbackframe(0.1, () => {
         CAMERA_controller.lookObject = PROTAGONIST;
     }),
-    new Callbackframe(3.0, () => {
-        portal();
-    }),
+    // new Callbackframe(3.0, () => {
+    //     portal();
+    // }),
     new Callbackframe(7.5, () => {
         warpParticle();
         PROTAGONIST.isActive = false;

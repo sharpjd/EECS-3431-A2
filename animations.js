@@ -160,7 +160,19 @@ function warpParticle() {
     testParticleSystemObject.init(PROTAGONIST.scene);
 
     var testParticleLayer1 = new ParticleLayer(
-        new Mesh( () => { gScale(15, 15, 15); drawSphere(); } ), 
+        new Mesh( () => { 
+            // drawGlowShader( //this breaks scaling
+            //     () => {
+            //         gScale(15, 15, 15); 
+            //         drawSphere();
+            //     },
+            //     vec3(1, 1, 1),
+            //     vec3(0, 0, 1)
+            // )
+            setColor(vec4(0.6, 0.9, 1, 1));
+            gScale(15, 15, 15); 
+            drawSphere();
+        } ), 
         vec3(0.0, 1.0, 0.0), 
         4.0, 0.2, 0.3, 20.0, 0.25
     );

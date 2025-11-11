@@ -1,6 +1,6 @@
 var scene = new Scene();
 
-Math.seedrandom("big chungus++");
+Math.seedrandom("big chungus++++");
 
 // ========== COMMON MESHES =============
 var PROJECTILE_mesh = new Mesh(() => {
@@ -307,7 +307,7 @@ var starsPlacer = new RandomPlacer(
                                         "useTextures"), useTextures );
             setColor(vec4(1.0, 1.0, 1.0, 1.0));
             gPush();{
-                gScale(0.5, 0.5, 0.5);
+                gScale(1, 1, 1);
                 drawSphere();
             }gPop();
             useTextures = useTexturesPrev;
@@ -323,8 +323,8 @@ var starsPlacer = new RandomPlacer(
         dontSpawnNegativePosMult : true,
         bottomLeft : vec3(-500,-500,-500), 
         topRight : vec3(500,500,500), 
-        count : 500,
-        minDistance : 100
+        count : 200,
+        minDistance : 250
     }
 );
 starsSO.addComponent( starsPlacer );
@@ -346,12 +346,13 @@ var asteroidPlacerComponent = new AsteroidRandomPlacer(
         positionMultiplierCurve : () => {
             let random = Math.random();
             //asteroids are more likely to be CLOSER than far away
-            let mult = -(random ** 4) + 1;
+            let mult = -(random ** 2) + 1;
             return mult;
         },
-        bottomLeft : vec3(-50,-50,-50), 
-        topRight : vec3(50,50,50), 
-        count : 50
+        bottomLeft : vec3(-100,-100,-50), 
+        topRight : vec3(100,100,300), 
+        count : 100,
+        minDistance: 100
     }
 );
 asteroidPlacer.addComponent( asteroidPlacerComponent );

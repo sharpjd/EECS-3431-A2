@@ -566,7 +566,8 @@ class AsteroidRandomPlacer extends Component {
                 positionMultiplierCurve=null, 
                 bottomLeft = vec3(-50,-50,-50), 
                 topRight = vec3(50,50,50), 
-                count = 100
+                count = 100,
+                minDistance = 0
             } = {}
         )
     {
@@ -574,6 +575,7 @@ class AsteroidRandomPlacer extends Component {
         this.bottomLeft = bottomLeft;
         this.topRight = topRight;
         this.count = count;
+        this.minDistance = minDistance;
         this.positionMultiplierCurve = positionMultiplierCurve;
     
 
@@ -607,19 +609,24 @@ class AsteroidRandomPlacer extends Component {
             z *= positionMultiplier;
 
             let center = vec3(x, y, z);
+
+            if(length(center) < this.minDistance){
+                center = scalev(this.minDistance / length(center), center);
+            }
+
             let mainAsteroidPart;
             //an asteroid contains multiple sub-asteroids to create lumpiness illusion
             for(let i = 0; i < 5 + Math.floor(Math.random() * 6); i++) {
 
-                let pos_offset_scale = 1.8; // scale factor
+                let pos_offset_scale = 5.4; // scale factor
                 let pos_offset = vec3(
                     (Math.random() - 0.5) * pos_offset_scale,
                     (Math.random() - 0.5) * pos_offset_scale,
                     (Math.random() - 0.5) * pos_offset_scale
                 );
 
-                let scale_max = 1.5;
-                let scale_min = 0.5;
+                let scale_max = 4.5;
+                let scale_min = 1.5;
                 let scale = scale_min + Math.random() * (scale_max - scale_min);
                 let scale_offset = vec3(
                     scale,

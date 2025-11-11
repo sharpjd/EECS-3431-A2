@@ -358,6 +358,7 @@ var asteroidPlacerComponent = new AsteroidRandomPlacer(
 asteroidPlacer.addComponent( asteroidPlacerComponent );
 scene.SCENEOBJECTS.push( asteroidPlacer );
 
+/*
 var projectile_so = new SceneObject();
 projectile_so.transform.translation = vec3(5, 0, -5);
 projectile_so.transform.scale = vec3(0.5, 0.5, 2);
@@ -365,5 +366,6 @@ var projectile_mesh = new ProjectileMesh();
 var projectile_mesh_renderer = new MeshRenderer(projectile_mesh);
 projectile_so.addComponent(projectile_mesh_renderer);
 scene.SCENEOBJECTS.push(projectile_so);
+*/
 scene.SCENEOBJECTS.push( CAMERA );
 

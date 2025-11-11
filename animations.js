@@ -105,7 +105,7 @@ var CAMERA_cf = [
     new Callbackframe(18, () => {
         explodeParticle();
     }),
-    new Callbackframe(19, () => {
+    new Callbackframe(20.5, () => {
         ENEMY_blaster_ps.canEmitParticles = false;
     }),
     new Callbackframe(22, () => {

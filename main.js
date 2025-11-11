@@ -3,7 +3,7 @@
 var canvas;
 var gl;
 
-var program ;
+var default_shader ;
 
 var near = 1;
 var far = 1000;
@@ -49,7 +49,7 @@ var TIME = 0.0 ; // Realtime
 var resetTimerFlag = true ;
 var animFlag = false ;
 var prevTime = 0.0 ;
-var useTextures = 1 ;
+var useTextures = 0 ;
 
 // ------------ Images for textures stuff --------------
 var texSize = 64;
@@ -172,21 +172,21 @@ function setColor(c)
     diffuseProduct = mult(lightDiffuse, c);
     specularProduct = mult(lightSpecular, materialSpecular);
     
-    gl.uniform4fv( gl.getUniformLocation(program,
+    gl.uniform4fv( gl.getUniformLocation(default_shader,
                                          "ambientProduct"),flatten(ambientProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
+    gl.uniform4fv( gl.getUniformLocation(default_shader,
                                          "diffuseProduct"),flatten(diffuseProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
+    gl.uniform4fv( gl.getUniformLocation(default_shader,
                                          "specularProduct"),flatten(specularProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
+    gl.uniform4fv( gl.getUniformLocation(default_shader,
                                          "lightPosition"),flatten(lightPosition) );
-    gl.uniform1f( gl.getUniformLocation(program, 
+    gl.uniform1f( gl.getUniformLocation(default_shader, 
                                         "shininess"),materialShininess );
 }
 
 function toggleTextures() {
     useTextures = 1 - useTextures ;
-    gl.uniform1i( gl.getUniformLocation(program,
+    gl.uniform1i( gl.getUniformLocation(default_shader,
                                          "useTextures"), useTextures );
 }
 
@@ -247,22 +247,22 @@ window.onload = function init() {
     //
     //  Load shaders and initialize attribute buffers
     //
-    program = initShaders( gl, "vertex-shader", "fragment-shader" );
-    gl.useProgram( program );
+    default_shader = initShaders( gl, "vertex-shader", "fragment-shader" );
+    gl.useProgram( default_shader );
     
  
     // Load canonical objects and their attributes
-    Cube.init(program);
-    Cylinder.init(9,program);
-    Cone.init(9,program) ;
-    Sphere.init(36,program) ;
+    Cube.init(default_shader);
+    Cylinder.init(9,default_shader);
+    Cone.init(9,default_shader) ;
+    Sphere.init(36,default_shader) ;
 
-    gl.uniform1i( gl.getUniformLocation(program, "useTextures"), useTextures );
+    gl.uniform1i( gl.getUniformLocation(default_shader, "useTextures"), useTextures );
 
     // record the locations of the matrices that are used in the shaders
-    modelViewMatrixLoc = gl.getUniformLocation( program, "modelViewMatrix" );
-    normalMatrixLoc = gl.getUniformLocation( program, "normalMatrix" );
-    projectionMatrixLoc = gl.getUniformLocation( program, "projectionMatrix" );
+    modelViewMatrixLoc = gl.getUniformLocation( default_shader, "modelViewMatrix" );
+    normalMatrixLoc = gl.getUniformLocation( default_shader, "normalMatrix" );
+    projectionMatrixLoc = gl.getUniformLocation( default_shader, "projectionMatrix" );
     
     // set a default material
     setColor(materialDiffuse) ;
@@ -430,7 +430,7 @@ function render() {
     }
 
     // ========== SCENE RENDER LOOP ==============
-    scene.TIME = TIME + 0;
+    scene.TIME = TIME + 13;
     //ENEMY_mr.isActive = true;
     scene.DELTATIME = deltaTime ;
     scene.render();
@@ -443,9 +443,9 @@ function render() {
     
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, textureArray[0].textureWebGL);
-    gl.uniform1i(gl.getUniformLocation(program, "texture1"), 0);
+    gl.uniform1i(gl.getUniformLocation(default_shader, "texture1"), 0);
 
-    gl.uniform4fv( gl.getUniformLocation(program, "offsetColor"), flatten(vec4(-0.1,-0.1,-0.1,0.0)) ) ;
+    gl.uniform4fv( gl.getUniformLocation(default_shader, "offsetColor"), flatten(vec4(-0.1,-0.1,-0.1,0.0)) ) ;
     
     // gl.activeTexture(gl.TEXTURE1);
     // gl.bindTexture(gl.TEXTURE_2D, textureArray[1].textureWebGL);

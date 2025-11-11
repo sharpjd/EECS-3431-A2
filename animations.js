@@ -180,13 +180,32 @@ function explodeParticle() {
     testParticleSystemObject.init(PROTAGONIST.scene);
 
     var testParticleLayer1 = new ParticleLayer(
-        new Mesh( () => { gScale(0.5, 0.5, 0.5); drawCone(); } ), 
+        new Mesh( () => { 
+            drawGlowShader(
+                () => {
+                    gScale(0.5, 0.5, 0.5); drawCone(); 
+                },
+                vec3(1, 1, 0.8),
+                vec3(1, 0.8, 0)
+            )
+            
+        } ), 
         vec3(0.0, 1.0, 0.0), 
         3.0, 30.0, 3.0, 50.0, 0.5
     );
 
     var testParticleLayer2 = new ParticleLayer(
-        new Mesh( () => { gScale(2.5, 2.5, 2.5); drawSphere(); } ), 
+        new Mesh( () => { 
+            drawGlowShader(
+                () => {
+                    gScale(2.5, 2.5, 2.5); 
+                    drawSphere(); 
+                },
+                vec3(1, 1, 0.8),
+                vec3(1, 0.8, 0)
+            )
+            
+        } ),  
         vec3(0.0, 1.0, 0.0), 
         4.0, 0.2, 0.3, 20.0, 0.25
     );
@@ -206,13 +225,32 @@ function explodeParticleEnemy() {
     testParticleSystemObject.init(ENEMY.scene);
 
     var testParticleLayer1 = new ParticleLayer(
-        new Mesh( () => { gScale(0.5, 0.5, 0.5); drawCone(); } ), 
+        new Mesh( () => { 
+            drawGlowShader(
+                () => {
+                    gScale(0.5, 0.5, 0.5); drawCone(); 
+                },
+                vec3(1, 1, 0.8),
+                vec3(1, 0.8, 0)
+            )
+            
+        } ), 
         vec3(0.0, 1.0, 0.0), 
         5.0, 50.0, 3.0, 250.0, 0.75
     );
 
     var testParticleLayer2 = new ParticleLayer(
-        new Mesh( () => { gScale(2.5, 2.5, 2.5); drawSphere(); } ), 
+        new Mesh( () => { 
+            drawGlowShader(
+                () => {
+                    gScale(2.5, 2.5, 2.5); 
+                    drawSphere(); 
+                },
+                vec3(1, 1, 0.8),
+                vec3(1, 0.8, 0)
+            )
+            
+        } ), 
         vec3(0.0, 1.0, 0.0), 
         4.0, 0.2, 0.3, 20.0, 0.25
     );

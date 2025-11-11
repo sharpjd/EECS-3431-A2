@@ -6,7 +6,9 @@ Math.seedrandom("big chungus++");
 var PROJECTILE_mesh = new Mesh(() => {
     tMatrix(() => {
         scale(0.2, 0.2, 0.2);
-        drawSphere();
+        drawGlowShader(
+            drawSphere
+        )
     });
 });
 
@@ -21,46 +23,53 @@ var PROJECTILE_mesh = new Mesh(() => {
 var ENEMY = new SceneObject();
 
 function ENEMY_wing() {
-    tMatrix(() => {
-        gTranslate(3, 0, 0);
-        tMatrix(() => {
+    drawDefaultShader(
+        () => {
             tMatrix(() => {
-                gTranslate(0, 0, 2);
-                gScale(0.75, 0.75, 0.75);
-                drawCone();
-            });
-            gTranslate(0, 0, -1);
-            drawCone();
-            gTranslate(0, 0, -0.5);
-            gScale(0.75, 0.75, 0.5);
-            drawSphere();
-        });
-        tMatrix(() => {
-            gScale(1, 1, 3);
-            drawCylinder();
-        });
+                gTranslate(3, 0, 0);
+                tMatrix(() => {
+                    tMatrix(() => {
+                        gTranslate(0, 0, 2);
+                        gScale(0.75, 0.75, 0.75);
+                        drawCone();
+                    });
+                    gTranslate(0, 0, -1);
+                    drawCone();
+                    gTranslate(0, 0, -0.5);
+                    gScale(0.75, 0.75, 0.5);
+                    drawSphere();
+                });
+                tMatrix(() => {
+                    gScale(1, 1, 3);
+                    drawCylinder();
+                });
 
-        gTranslate(-6, 0, 0);
-        tMatrix(() => {
-            tMatrix(() => {
-                gTranslate(0, 0, 2);
-                gScale(0.75, 0.75, 0.75);
-                drawCone();
+                gTranslate(-6, 0, 0);
+                tMatrix(() => {
+                    tMatrix(() => {
+                        gTranslate(0, 0, 2);
+                        gScale(0.75, 0.75, 0.75);
+                        drawCone();
+                    });
+                    gTranslate(0, 0, -1);
+                    drawCone();
+                    gTranslate(0, 0, -0.5);
+                    gScale(0.75, 0.75, 0.5);
+                    drawSphere();
+                });
+                tMatrix(() => {
+                    gScale(1, 1, 3);
+                    drawCylinder();
+                });
             });
-            gTranslate(0, 0, -1);
-            drawCone();
-            gTranslate(0, 0, -0.5);
-            gScale(0.75, 0.75, 0.5);
-            drawSphere();
-        });
-        tMatrix(() => {
-            gScale(1, 1, 3);
-            drawCylinder();
-        });
-    });
-    gScale(2, 0.2, 1);
-    gRotate(45, 0, 0, 1);
-    drawCube();
+            gScale(2, 0.2, 1);
+            gRotate(45, 0, 0, 1);
+            drawCube();
+        },
+        () => {
+            setColor(vec4(1, 0, 0, 1))
+        }
+    )
 } 
 
 var ENEMY_mesh_body = new Mesh(() => {
@@ -125,38 +134,45 @@ var PROTAGONIST_ac = new AnimationComponent(PROTAGONIST_kf, PROTAGONIST_cf);
 PROTAGONIST.addComponent(PROTAGONIST_ac)
 
 var PROTAGONIST_mesh_body = new Mesh(() => {
-    tMatrix(() => {
-        gTranslate(0, 0, -0.5);
-        gScale(2, 1, 2);
-        drawCylinder();
-    });
-    tMatrix(() => {
-        gTranslate(0, 0, 0.75);
-        gScale(1, 0.5, 0.5);
-        drawCone();
-    });
-    tMatrix(() => {
-        gTranslate(0, 0.5, -0.5);
-        gScale(0.25, 0.25, 0.5);
-        drawSphere();
-    });
-    tMatrix(() => {
-        gTranslate(0, 0, -1.75);
-        gScale(1, 0.5, -0.5);
-        drawCone();
-    });
-    tMatrix(() => {
-        gTranslate(0, 0, -3);
-        gScale(1, 0.5, 2.5);
-        drawCylinder();
-    });
-    tMatrix(() => {
-        gTranslate(0, 0, -4);
-        gScale(3, 1, 1);
-        gRotate(90, 0, 1, 0);
-        
-        drawCylinder();
-    });
+    drawDefaultShader(
+        () => {
+            tMatrix(() => {
+                gTranslate(0, 0, -0.5);
+                gScale(2, 1, 2);
+                drawCylinder();
+            });
+            tMatrix(() => {
+                gTranslate(0, 0, 0.75);
+                gScale(1, 0.5, 0.5);
+                drawCone();
+            });
+            tMatrix(() => {
+                gTranslate(0, 0.5, -0.5);
+                gScale(0.25, 0.25, 0.5);
+                drawSphere();
+            });
+            tMatrix(() => {
+                gTranslate(0, 0, -1.75);
+                gScale(1, 0.5, -0.5);
+                drawCone();
+            });
+            tMatrix(() => {
+                gTranslate(0, 0, -3);
+                gScale(1, 0.5, 2.5);
+                drawCylinder();
+            });
+            tMatrix(() => {
+                gTranslate(0, 0, -4);
+                gScale(3, 1, 1);
+                gRotate(90, 0, 1, 0);
+                
+                drawCylinder();
+            });
+        },
+        () => {
+            setColor(vec4(0.3, 0.5, 1, 1));
+        }
+    )
 });
 
 PROTAGONIST.addComponent(new MeshRenderer(PROTAGONIST_mesh_body));
@@ -287,7 +303,7 @@ var starsPlacer = new RandomPlacer(
         mesh : new Mesh(() => {
             useTexturesPrev = useTextures;
             useTextures = false;
-            gl.uniform1i( gl.getUniformLocation(program,
+            gl.uniform1i( gl.getUniformLocation(default_shader,
                                         "useTextures"), useTextures );
             setColor(vec4(1.0, 1.0, 1.0, 1.0));
             gPush();{
@@ -295,7 +311,7 @@ var starsPlacer = new RandomPlacer(
                 drawSphere();
             }gPop();
             useTextures = useTexturesPrev;
-            gl.uniform1i( gl.getUniformLocation(program,
+            gl.uniform1i( gl.getUniformLocation(default_shader,
                                         "useTextures"), useTextures );
         }),
         positionMultiplierCurve : () => {

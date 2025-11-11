@@ -33,9 +33,13 @@ class AsteroidMesh extends Mesh {
             );
         }
 
-        gl.uniform4fv( gl.getUniformLocation(program, "offsetColor"), 
+        toggleTextures();
+
+        gl.uniform4fv( gl.getUniformLocation(default_shader, "offsetColor"), 
             flatten(this.colorOffset) ) ;
         drawSphere();
+
+        toggleTextures();
         // }
             
         // if(this.shape == 1){
@@ -198,6 +202,67 @@ class SunMesh extends Mesh {
 
 }
 
+function drawGlowShader(
+    toDraw=() => {console.error("No draw function specified.")},
+    innerColor=vec3(1.0, 0.8, 0.8),
+    outerColor=vec3(1.0, 0.2, 0.0)
+) {
+    prev_program = gl.getParameter(gl.CURRENT_PROGRAM);
+
+    if (!sun_program) {
+        sun_program = initShaders(gl, "sun-vertex-shader", "sun-fragment-shader");
+    }
+
+    gl.useProgram(sun_program);
+
+    const modelViewMatrix = mult(viewMatrix, modelMatrix);
+    const normalMatrix = inverseTranspose(modelViewMatrix);
+
+    gl.uniformMatrix4fv(
+        gl.getUniformLocation(sun_program, "modelViewMatrix"),
+        false,
+        flatten(modelViewMatrix)
+    );
+
+    let n3 = mat3();
+    for (let i = 0; i < 3; i++)
+        for (let j = 0; j < 3; j++)
+            n3[i][j] = modelViewMatrix[i][j];
+    gl.uniformMatrix3fv(
+        gl.getUniformLocation(sun_program, "normalMatrix"),
+        false,
+        flatten(n3)
+    );
+    gl.uniformMatrix4fv(
+        gl.getUniformLocation(sun_program, "projectionMatrix"),
+        false,
+        flatten(projectionMatrix)
+    );
+
+    gl.uniform1f(gl.getUniformLocation(sun_program, "uTime"), scene.TIME);
+    gl.uniform3fv(gl.getUniformLocation(sun_program, "uSunColor"), innerColor);  // white-red core
+    gl.uniform3fv(gl.getUniformLocation(sun_program, "uGlowColor"), outerColor); // reddish edge
+
+    toDraw();
+
+    gl.useProgram(prev_program);
+}
+
+function drawDefaultShader(
+    toDraw=() => {console.error("No draw function specified.")},
+    runAfterUsingShader=() => {}
+){
+    prev_program = gl.getParameter(gl.CURRENT_PROGRAM);
+
+    gl.useProgram(default_shader)
+
+    runAfterUsingShader();
+
+    toDraw();
+
+    gl.useProgram(prev_program);
+}
+
 class ProjectileMesh extends Mesh { 
     constructor() {
         super(() => {
@@ -206,46 +271,7 @@ class ProjectileMesh extends Mesh {
     }
 
     drawProjectile(){
-
-        prev_program = gl.getParameter(gl.CURRENT_PROGRAM);
-
-        if (!sun_program) {
-            sun_program = initShaders(gl, "sun-vertex-shader", "sun-fragment-shader");
-        }
-
-        gl.useProgram(sun_program);
-
-        const modelViewMatrix = mult(viewMatrix, modelMatrix);
-        const normalMatrix = inverseTranspose(modelViewMatrix);
-
-        gl.uniformMatrix4fv(
-            gl.getUniformLocation(sun_program, "modelViewMatrix"),
-            false,
-            flatten(modelViewMatrix)
-        );
-
-        let n3 = mat3();
-        for (let i = 0; i < 3; i++)
-            for (let j = 0; j < 3; j++)
-                n3[i][j] = modelViewMatrix[i][j];
-        gl.uniformMatrix3fv(
-            gl.getUniformLocation(sun_program, "normalMatrix"),
-            false,
-            flatten(n3)
-        );
-        gl.uniformMatrix4fv(
-            gl.getUniformLocation(sun_program, "projectionMatrix"),
-            false,
-            flatten(projectionMatrix)
-        );
-
-        gl.uniform1f(gl.getUniformLocation(sun_program, "uTime"), scene.TIME);
-        gl.uniform3fv(gl.getUniformLocation(sun_program, "uSunColor"), vec3(1.0, 0.8, 0.8));  // white-red core
-        gl.uniform3fv(gl.getUniformLocation(sun_program, "uGlowColor"), vec3(1.0, 0.2, 0.0)); // reddish edge
-
-        drawCylinder(false);
-
-        gl.useProgram(prev_program);
+        drawGlowShader(() => drawCylinder(false));
     }
 
 }

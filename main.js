@@ -299,11 +299,11 @@ window.onload = function init() {
         window.requestAnimFrame(render);
     };
 
-    var controller = new CameraController(canvas);
-    controller.onchange = function(xRot,yRot) {
-        RX = xRot ;
-        RY = yRot ;
-        window.requestAnimFrame(render); };
+    // var controller = new CameraController(canvas);
+    // controller.onchange = function(xRot,yRot) {
+    //     RX = xRot ;
+    //     RY = yRot ;
+    //     window.requestAnimFrame(render); };
     
     // load and initialize the textures
     initTextures() ;

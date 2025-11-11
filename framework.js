@@ -339,12 +339,12 @@ class CameraControllerComponent extends Component {
         let forward = normalize(subtract(at, eye));
         let right = normalize(cross(forward, up));
 
-        if (keys['w']) this.root.transform.translation = add(this.root.transform.translation, scalev(moveSpeed * deltaTime, forward));
-        if (keys['s']) this.root.transform.translation = subtract(this.root.transform.translation, scalev(moveSpeed * deltaTime, forward)); 
-        if (keys['a']) this.root.transform.translation = subtract(this.root.transform.translation, scalev(moveSpeed * deltaTime, right));
-        if (keys['d']) this.root.transform.translation = add(this.root.transform.translation, scalev(moveSpeed * deltaTime, right));
-        if (keys[' ']) this.root.transform.translation = add(this.root.transform.translation, scalev(moveSpeed * deltaTime, up));
-        if (keys['shift']) this.root.transform.translation = subtract(this.root.transform.translation, scalev(moveSpeed * deltaTime, up));
+        // if (keys['w']) this.root.transform.translation = add(this.root.transform.translation, scalev(moveSpeed * deltaTime, forward));
+        // if (keys['s']) this.root.transform.translation = subtract(this.root.transform.translation, scalev(moveSpeed * deltaTime, forward)); 
+        // if (keys['a']) this.root.transform.translation = subtract(this.root.transform.translation, scalev(moveSpeed * deltaTime, right));
+        // if (keys['d']) this.root.transform.translation = add(this.root.transform.translation, scalev(moveSpeed * deltaTime, right));
+        // if (keys[' ']) this.root.transform.translation = add(this.root.transform.translation, scalev(moveSpeed * deltaTime, up));
+        // if (keys['shift']) this.root.transform.translation = subtract(this.root.transform.translation, scalev(moveSpeed * deltaTime, up));
 
         eye = this.root.transform.translation;
 

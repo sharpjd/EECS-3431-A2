@@ -22,7 +22,7 @@ var PROTAGONIST_kf = [
     new Keyframe(38, new Transform(vec3(30, 32, 120), vec3(0, 15, 115), vec3(1, 1, 1))),
     new Keyframe(39, new Transform(vec3(30, 32, 130), vec3(0, 15, 180), vec3(1, 1, 0.5))),
     new Keyframe(39.4, new Transform(vec3(30, 32, 130), vec3(0, 15, 180), vec3(1, 1, 1))),
-    new Keyframe(42, new Transform(vec3(30, 32, 220), vec3(0, 15, 180), vec3(1, 1, 7))),
+    new Keyframe(42, new Transform(vec3(30, 32, 300), vec3(0, 15, 180), vec3(1, 1, 7))),
 
 
 ]

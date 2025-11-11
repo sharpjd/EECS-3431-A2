@@ -430,7 +430,7 @@ function render() {
     }
 
     // ========== SCENE RENDER LOOP ==============
-    scene.TIME = TIME + 13;
+    scene.TIME = TIME + 7;
     //ENEMY_mr.isActive = true;
     scene.DELTATIME = deltaTime ;
     scene.render();

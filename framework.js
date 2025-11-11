@@ -82,6 +82,7 @@ class Component {
     constructor() {
         this.root;
         this.scene;
+        this.parent;
         this.isActive = true;
     }
     init(root, scene) {
@@ -161,6 +162,7 @@ class SceneObject {
         if(this.scene != null && this.scene.SCENESTARTED) { //if the scene has already started, init and start the component immediately
             component.init(this, this.scene);
             component.start();
+            component.parent = this;
         }
         
     }
@@ -643,6 +645,8 @@ class AsteroidRandomPlacer extends Component {
 
                 if(mainAsteroidPart == null) {
                     mainAsteroidPart = asteroid;
+                    // let asteroidSpinny = new AsteroidSpinny();
+                    // mainAsteroidPart.addComponent(asteroidSpinny);
                 } else {
                     mainAsteroidPart.addChild(asteroid);
                 }
@@ -653,6 +657,39 @@ class AsteroidRandomPlacer extends Component {
         }
     }
 }
+
+// class AsteroidSpinny extends Component {
+//     constructor() {
+//         super();
+//         this.rotationSpeed;
+//         this.started = false;
+//     }
+//     start() {
+//         let minRotSpeed = 300;
+//         let maxRotSpeed = 3600;
+
+//         this.rotationSpeed = vec3(
+//             minRotSpeed + (Math.random() * (maxRotSpeed - minRotSpeed)),
+//             minRotSpeed + (Math.random() * (maxRotSpeed - minRotSpeed)),
+//             minRotSpeed + (Math.random() * (maxRotSpeed - minRotSpeed))
+//         );
+
+//         this.started = true;
+//         //console.log(this.rotationSpeed);
+//     }
+//     update() {
+
+//         if(!this.started)
+//             this.start();
+
+//         if(this.scene.DELTATIME != 0 && this.parent != null) {
+//             this.parent.transform.rotation =
+//             add(scalev(this.scene.DELTATIME, this.rotationSpeed), 
+//                 this.parent.transform.rotation);
+//         }
+        
+//     }
+// }
 
 function rotateDir(d, r) {
     // convert deg → rad

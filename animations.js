@@ -61,6 +61,9 @@ var CAMERA_cf = [
     new Callbackframe(0.1, () => {
         CAMERA_controller.lookObject = PROTAGONIST;
     }),
+    new Callbackframe(3.0, () => {
+        portal();
+    }),
     new Callbackframe(7.5, () => {
         warpParticle();
         PROTAGONIST.isActive = false;
@@ -274,4 +277,58 @@ function explodeParticleEnemy() {
     ENEMY.addChild(testParticleSystemObject);
 
     scene.SCENEOBJECTS.push( testParticleSystemObject );
+}
+
+function portal() {
+    var portal_so = new SceneObject();
+    portal_so.init(PROTAGONIST.scene);
+
+    var timerComponent = new Component();
+    timerComponent.expandDuration = 1;
+    timerComponent.fullDuration = 0.5;
+    timerComponent.collapseDuration = 0.2;
+    timerComponent.scale = 1;
+    timerComponent.update = () => {
+        portal_so.transform = PROTAGONIST.transform;
+        portal_so.transform.translation = scalev(2, portal_so.transform.translation);
+        if(timerComponent.expandDuration > 0){
+            timerComponent.scale = 1 - timerComponent.expandDuration;
+            timerComponent.expandDuration -= PROTAGONIST.scene.DELTATIME;
+        }
+        if(timerComponent.expandDuration <= 0 && timerComponent.fullDuration > 0){
+            timerComponent.scale = 1;
+            timerComponent.fullDuration -= PROTAGONIST.scene.DELTATIME;
+        }
+        if(timerComponent.expandDuration <= 0 && timerComponent.fullDuration <= 0 && timerComponent.collapseDuration > 0){
+            timerComponent.scale = timerComponent.collapseDuration * 5;
+            timerComponent.collapseDuration -= PROTAGONIST.scene.DELTATIME;
+        }
+        if(timerComponent.expandDuration <= 0 && timerComponent.fullDuration <= 0 && timerComponent.collapseDuration <= 0){
+            portal_so.destroy();
+        }
+
+        console.log(timerComponent.scale);
+    }
+
+    var portal_mesh = new Mesh( () => { 
+            // drawGlowShader( //this breaks scaling
+            //     () => {
+            //         gScale(15, 15, 15); 
+            //         drawSphere();
+            //     },
+            //     vec3(1, 1, 1),
+            //     vec3(0, 0, 1)
+            // )
+            setColor(vec4(0.6, 0.9, 1, 1));
+            gScale(30 * timerComponent.scale, 30 * timerComponent.scale, 1); 
+            drawSphere();
+        } 
+    )
+
+    var portal_mesh_renderer = new MeshRenderer(portal_mesh);
+
+    portal_so.addComponent(timerComponent);
+    portal_so.addComponent(portal_mesh_renderer);
+
+    scene.SCENEOBJECTS.push( portal_so );
 }

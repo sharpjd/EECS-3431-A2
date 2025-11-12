@@ -1,4 +1,4 @@
-EECS3431 A2 - Project by Anthony Dang and Jason Dong
+EECS3431 A2 - Project by Anthony Dang (218873513) and Jason Dong (219732387)
 
 All required elements are fulfiled.
 
@@ -6,7 +6,9 @@ This animation implements a SceneObject-based architecture.
 
 --- Scene ---
 A Scene contains SceneObjects that are updated every frame, TIME (the time elapsed since the start), and DELTATIME (the time between rendered frames).
-Through dependency injection, each SceneObject contains a reference to a Scene.
+Through dependency injection, each SceneObject contains a reference to a Scene. 
+
+This system was crucial to making the scope of the project possible. Almost every feature ties into this system.
 
 --- SceneObject ---
 Contain a transform, components, and child SceneObjects.
@@ -23,7 +25,7 @@ A Component that draws a Mesh object. A Mesh object is an object containing a fu
 We used MeshRenderers to render Meshes in the place of a SceneObject.
 
 --- AnimationComponent ---
-Allows us to manipulate the Transform of a SceneObject over time through interpolating between keyframes.
+Allows us to manipulate the Transform of a SceneObject over time through interpolating between keyframes. Keyframes are an object containing a timestamp and target transform.
 This component is used extensively when animating SceneObjects.
 An AnimationComponent can also be used for "Callbackframes", allowing functions to be executed at a specified timestamp.
 This allows for scripted sequences during an animation.
@@ -38,3 +40,13 @@ The particle system allows us to layer particle effects.
 Particles are SceneObjects with MeshRenderers and AnimationComponents and are animated based on specified parameters.
 We used the particle system for projectiles and explosions.
 
+-- Shaders --
+We modified the default shader by adding the ability to apply an offset to the texture color. This is passed in via a custom Uniform value.
+
+We also added a shader ("sun-shader") which makes objects "emissive" or appear to glow (bright from any angle).
+
+--- External Resources---
+Libraries: 
+- https://github.com/joeiddon/perlin - We were originally planning to use this for camera shake, but we didn't have time to do this.
+- https://github.com/davidbau/seedrandom - Used for seeding Math.random() so we would have a consistent scene every time.
+- Asteroid texture - https://www.istockphoto.com/photos/moon-surface-seamless-crater-meteor-crater
